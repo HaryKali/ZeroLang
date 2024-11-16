@@ -27,6 +27,11 @@ class InvalidSyntaxError(Error):
         super().__init__(pos_start, pos_end, 'Invalid Syntax', details)
 
 
+class RTError(Error):
+    def __init__(self, pos_start, pos_end, details=''):
+        super().__init__(pos_start, pos_end, 'Run Time Error', details)
+
+
 class Position:
     def __init__(self, idx, ln, col, fn, ftxt):
         self.idx = idx
@@ -273,6 +278,24 @@ class Parser:
         return res.success(left)
 
 
+class RTResult:
+    def __init__(self):
+        self.value = None
+        self.error = None
+
+    def register(self, res):
+        if res.error: self.error = res.error
+        return res.value
+
+
+    def success(self, value):
+        self.value = value
+        return self
+    def failure(self, error):
+        self.error = error
+        return self
+
+
 class Number:
     def __init__(self, value):
         self.value = value
@@ -285,18 +308,26 @@ class Number:
 
     def added_to(self, other):
         if isinstance(other, Number):
-            return Number(self.value + other.value)
+            return Number(self.value + other.value), None
 
     def subbed_by(self, other):
         if isinstance(other, Number):
-            return Number(self.value - other.value)
+            return Number(self.value - other.value), None
 
     def multed_by(self, other):
         if isinstance(other, Number):
-            return Number(self.value * other.value)
+            return Number(self.value * other.value), None
 
     def dived_by(self, other):
         if isinstance(other, Number):
+
+            if other.value == 0:
+                return None, RTError(
+                    pos_start=other.pos_start,
+                    pos_end=other.pos_end,
+                    details="Division by zero"
+                )
+
             return Number(self.value / other.value)
 
     def __repr__(self):
@@ -314,32 +345,46 @@ class Interpreter:
 
     def visit_NumberNode(self, node):
         # print("Found Number Node!")
-        return Number(node.tok.value).set_pos(node.pos_start, node.pos_end)
-
+        res = RTResult()
+        return res.success(Number(node.tok.value).set_pos(node.pos_start, node.pos_end))
     def visit_BinOpNode(self, node):
         # print("Found BinOp Node!")
-        left = self.visit(node=node.left_node)
-        right = self.visit(node=node.right_node)
+        res = RTResult()
+        left = res.register(self.visit(node=node.left_node))
+        if res.error: return res
+        right = res.register(self.visit(node=node.right_node))
+        if res.error: return res
+
+
         if node.op_tok.type == TT_PLUS:
-            res = left.added_to(right)
+            result , error = left.added_to(right)
 
-        if node.op_tok.type == TT_MINUS:
-            res = left.subbed_by(right)
+        elif node.op_tok.type == TT_MINUS:
+            result , error = left.subbed_by(right)
 
-        if node.op_tok.type == TT_MUL:
-            res = left.multed_by(right)
+        elif node.op_tok.type == TT_MUL:
+            result , error = left.multed_by(right)
 
-        if node.op_tok.type == TT_DIV:
-            res = left.dived_by(right)
+        elif node.op_tok.type == TT_DIV:
+            result , error = left.dived_by(right)
 
-        return res.set_pos(node.pos_start, node.pos_end)
+        if error:
+            return res.failure(error)
+
+        return res.success(result .set_pos(node.pos_start, node.pos_end))
 
     def visit_UnaryOpNode(self, node):
         # print("Found naryOpNode!")
-        number = self.visit(node.node)
+        res = RTResult()
+        number = res.register(self.visit(node.node))
+        if res.error: return res
+        error = None
         if node.op_tok.type == TT_MINUS:
             number = number.multed_by(Number(-1))
-        return number.set_pos(node.pos_start, node.pos_end)
+
+        if error:
+            return res.failure(error)
+        return res.success(number.set_pos(node.pos_start, node.pos_end))
 
 
 def run(fn, text):
@@ -356,4 +401,4 @@ def run(fn, text):
     interpreter = Interpreter()
     result = interpreter.visit(ast.node)
 
-    return result, None
+    return result.value, result.error
