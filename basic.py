@@ -1,7 +1,4 @@
-
-
 from strings_with_arrows import *
-
 
 DIGITS = '0123456789'
 
@@ -30,8 +27,6 @@ class InvalidSyntaxError(Error):
         super().__init__(pos_start, pos_end, 'Invalid Syntax', details)
 
 
-
-
 class Position:
     def __init__(self, idx, ln, col, fn, ftxt):
         self.idx = idx
@@ -52,7 +47,6 @@ class Position:
 
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
-
 
 
 TT_INT = 'INT'
@@ -82,7 +76,6 @@ class Token:
     def __repr__(self):
         if self.value: return f'{self.type}:{self.value}'
         return f'{self.type}'
-
 
 
 class Lexer:
@@ -152,8 +145,6 @@ class Lexer:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
 
 
-
-
 class NumberNode:
     def __init__(self, tok):
         self.tok = tok
@@ -181,7 +172,6 @@ class UnaryOpNode:
         return f'({self.op_tok}, {self.node})'
 
 
-
 class ParseResult:
     def __init__(self):
         self.error = None
@@ -201,7 +191,6 @@ class ParseResult:
     def failure(self, error):
         self.error = error
         return self
-
 
 
 class Parser:
@@ -224,8 +213,6 @@ class Parser:
                 "Expected '+', '-', '*' or '/'"
             ))
         return res
-
-
 
     def factor(self):
         res = ParseResult()
@@ -265,8 +252,6 @@ class Parser:
     def expr(self):
         return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
-
-
     def bin_op(self, func, ops):
         res = ParseResult()
         left = res.register(func())
@@ -282,6 +267,23 @@ class Parser:
         return res.success(left)
 
 
+class Interpreter:
+    def visit(self, node):
+        method_name = f"visit_{type(node).__name__}"
+        method = getattr(self, method_name, self.no_visit_method)
+        return method(node)
+
+    def no_visit_method(self, node):
+        raise Exception(f"No visit {type(node).__name__} method defined")
+
+    def visit_NumberNode(self, node):
+        print("Found number node!")
+
+    def visit_BinOpNode(self, node):
+        print("Found BinOp Node!")
+
+    def visit_UnaryOpNode(self, node):
+        print("Found naryOpNode!")
 
 
 def run(fn, text):
@@ -293,5 +295,9 @@ def run(fn, text):
     # Generate AST
     parser = Parser(tokens)
     ast = parser.parse()
+    if ast.error: return None, ast.error
 
-    return ast.node, ast.error
+    interpreter = Interpreter()
+    interpreter.visit(ast.node)
+
+    return None, None
