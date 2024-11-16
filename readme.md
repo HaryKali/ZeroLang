@@ -1,6 +1,10 @@
 # ZeroLang
 
-## Introduction
+## 0. Introduction
 A simple programing language based on basic 
 
-* still working on it
+* Still working on it
+* Now is a simpile interpreter which support basic arithmetic operations
+
+## 1. Quick start
+* Just run the shell.py
