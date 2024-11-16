@@ -380,7 +380,7 @@ class Interpreter:
         if res.error: return res
         error = None
         if node.op_tok.type == TT_MINUS:
-            number = number.multed_by(Number(-1))
+            number,error = number.multed_by(Number(-1))
 
         if error:
             return res.failure(error)
