@@ -1,4 +1,4 @@
-# ZeroLang
+# ZeroLang(still woking on it!)
 
 ## 0. Introduction
 A simple programing language based on basic 
@@ -9,6 +9,6 @@ A simple programing language based on basic
 ## 1. Quick start
 * Just run the shell.py
 
-## function
+## 2. function
 * Support basic operations
 * Supports variable definition
