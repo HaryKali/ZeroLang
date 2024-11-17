@@ -83,6 +83,8 @@ TT_DIV = 'DIV'
 TT_LPAREN = 'LPAREN'
 TT_RPAREN = 'RPAREN'
 TT_EOF = 'EOF'
+TT_POW = "SQUARE"
+TT_MOD = "MOD"
 
 
 class Token:
@@ -141,6 +143,13 @@ class Lexer:
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == '^':
+                tokens.append(Token(TT_POW, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == '%':
+                tokens.append(Token(TT_MOD, pos_start=self.pos))
+                self.advance()
+
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
@@ -241,7 +250,7 @@ class Parser:
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                "Expected '+', '-', '*' or '/'"
+                "Expected '+', '-', '*' '/' '^' "
             ))
         return res
 
@@ -278,7 +287,7 @@ class Parser:
         ))
 
     def term(self):
-        return self.bin_op(self.factor, (TT_MUL, TT_DIV))
+        return self.bin_op(self.factor, (TT_MUL, TT_DIV, TT_POW, TT_MOD))
 
     def expr(self):
         return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
@@ -343,6 +352,14 @@ class Number:
         if isinstance(other, Number):
             return Number(self.value * other.value).set_context(self.context), None
 
+    def square_by(self, other):
+        if isinstance(other, Number):
+            return Number(self.value ** other.value).set_context(self.context), None
+
+    def modded_by(self, other):
+        if isinstance(other, Number):
+            return Number(self.value % other.value).set_context(self.context), None
+
     def dived_by(self, other):
         if isinstance(other, Number):
 
@@ -400,6 +417,12 @@ class Interpreter:
 
         elif node.op_tok.type == TT_DIV:
             result, error = left.dived_by(right)
+
+        elif node.op_tok.type == TT_POW:
+            result, error = left.square_by(right)
+
+        elif node.op_tok.type == TT_MOD:
+            result, error = left.modded_by(right)
 
         if error:
             return res.failure(error)
