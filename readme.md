@@ -8,3 +8,7 @@ A simple programing language based on basic
 
 ## 1. Quick start
 * Just run the shell.py
+
+## function
+* Support basic operations
+* Supports variable definition
