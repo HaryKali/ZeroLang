@@ -263,12 +263,12 @@ class ParseResult:
         self.error = None
         self.node = None
 
-    def register(self, res):
-        if isinstance(res, ParseResult):
-            if res.error: self.error = res.error
-            return res.node
+    def register_advancement(self):
+        pass
 
-        return res
+    def register(self, res):
+        if res.error: self.error = res.error
+        return res.node
 
     def success(self, node):
         self.node = node
@@ -319,23 +319,28 @@ class Parser:
         res = ParseResult()
         tok = self.current_tok
         if tok.type in (TT_INT, TT_FLOAT):
-            res.register(self.advance())
+            # res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             return res.success(NumberNode(tok))
         elif tok.type == TT_IDENTIFIER:
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             return res.success(VarAccessNode(tok))
 
         elif tok.type == TT_LPAREN:
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             expr = res.register(self.expr())
             if res.error: return res
             if self.current_tok.type == TT_RPAREN:
-                res.register(self.advance())
+                res.register_advancement()
+                self.advance()
                 return res.success(expr)
             else:
                 return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    "Expected ')'"
+                    "Expected 'int' 'float' 'var' '+' '-' ')'"
                 ))
 
     def term(self):
@@ -345,6 +350,7 @@ class Parser:
         res = ParseResult()
 
         if self.current_tok.matchers(TT_KEYWORD, "var"):
+            res.register_advancement()
             self.advance()  # 直接调用 advance
 
             if self.current_tok.type != TT_IDENTIFIER:
@@ -387,7 +393,8 @@ class Parser:
 
         while self.current_tok.type in ops:
             op_tok = self.current_tok
-            res.register(self.advance())
+            res.register_advancement()
+            self.advance()
             right = res.register(func_b())
             if res.error: return res
             left = BinOpNode(left, op_tok, right)
