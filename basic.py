@@ -89,6 +89,12 @@ TT_RPAREN = 'RPAREN'
 TT_EOF = 'EOF'
 TT_POW = "SQUARE"
 TT_MOD = "MOD"
+TT_EQ = "EQ"
+TT_NE = "NE"
+TT_LE = "LE"
+TT_GE = "GE"
+TT_LTE = "LTE"
+TT_GTE = "GTE"
 
 # variable tokens
 
@@ -97,6 +103,9 @@ TT_KEYWORD = "KEYWORD"
 TT_EQUAL = "EQUAL"
 KEYWORDS = [
     "var",
+    "and",
+    "or",
+    "not"
 ]
 
 
@@ -161,9 +170,19 @@ class Lexer:
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == "!":
+                tok, error = self.make_not_equals()
+                if error: return [], error
+                tokens.append(tok)
             elif self.current_char == '=':
                 tokens.append(Token(TT_EQUAL, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == '=':
+                tokens.append(self.make_equals())
+            elif self.current_char == '>':
+                tokens.append(self.make_greate_than())
+            elif self.current_char == '<':
+                tokens.append(self.make_less_than())
             elif self.current_char == '^':
                 tokens.append(Token(TT_POW, pos_start=self.pos))
                 self.advance()
@@ -208,6 +227,14 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start, self.pos)
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
+    def make_not_equals(self):
+        pass
+    def make_equals(self):
+        pass
+    def make_less_than(self):
+        pass
+    def make_greate_than(self):
+        pass
 
 
 class NumberNode:
