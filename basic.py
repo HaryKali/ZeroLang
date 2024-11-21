@@ -227,12 +227,19 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start, self.pos)
         else:
             return Token(TT_FLOAT, float(num_str), pos_start, self.pos)
+
     def make_not_equals(self):
-        pass
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == "=":
+            return Token(TT_NE, pos_start=pos_start, pos_end=self.pos), None
+
     def make_equals(self):
         pass
+
     def make_less_than(self):
         pass
+
     def make_greate_than(self):
         pass
 
