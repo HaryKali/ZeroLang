@@ -7,7 +7,12 @@ A simple programing language based on basic
 * Now is a simpile interpreter which support basic arithmetic operations
 
 ## 1. Quick start
-* Just run the shell.py
+
+'''bash
+
+python3 run shell.py
+
+'''
 
 ## 2. function
 * Support basic operations
