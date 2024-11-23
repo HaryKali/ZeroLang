@@ -8,11 +8,9 @@ A simple programing language based on basic
 
 ## 1. Quick start
 
-'''bash
-
-python3 run shell.py
-
-'''
+     ```key
+      python3 shell.py 
+     ``` 
 
 ## 2. function
 * Support basic operations
