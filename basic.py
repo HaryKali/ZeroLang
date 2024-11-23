@@ -1,6 +1,38 @@
 from strings_with_arrows import *
 import string
 
+# basic tokens
+TT_INT = 'INT'
+TT_FLOAT = 'FLOAT'
+TT_PLUS = 'PLUS'
+TT_MINUS = 'MINUS'
+TT_MUL = 'MUL'
+TT_DIV = 'DIV'
+TT_LPAREN = 'LPAREN'
+TT_RPAREN = 'RPAREN'
+TT_EOF = 'EOF'
+TT_POW = "SQUARE"
+TT_MOD = "MOD"
+TT_EQ = "EQ"
+TT_NE = "NE"
+TT_LT = "LT"
+TT_GT = "GT"
+TT_LTE = "LTE"
+TT_GTE = "GTE"
+TT_EE = "EE"
+
+# variable tokens
+
+TT_IDENTIFIER = "IDENTIFIER"
+TT_KEYWORD = "KEYWORD"
+TT_EQUAL = "EQUAL"
+KEYWORDS = [
+    "var",
+    "and",
+    "or",
+    "not"
+]
+
 DIGITS = '0123456789'
 LETTERS = string.ascii_letters
 LETTERS_DIGITS = LETTERS + DIGITS
@@ -20,9 +52,19 @@ class Error:
         return result
 
 
+"""
+Error
+"""
+
+
 class IllegalCharError(Error):
     def __init__(self, pos_start, pos_end, details):
         super().__init__(pos_start, pos_end, 'Illegal Character', details)
+
+
+class ExpectedCharError(Error):
+    def __init__(self, pos_start, pos_end, details):
+        super().__init__(pos_start, pos_end, 'Expected Character', details)
 
 
 class InvalidSyntaxError(Error):
@@ -75,38 +117,6 @@ class Position:
 
     def copy(self):
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
-
-
-# basic tokens
-TT_INT = 'INT'
-TT_FLOAT = 'FLOAT'
-TT_PLUS = 'PLUS'
-TT_MINUS = 'MINUS'
-TT_MUL = 'MUL'
-TT_DIV = 'DIV'
-TT_LPAREN = 'LPAREN'
-TT_RPAREN = 'RPAREN'
-TT_EOF = 'EOF'
-TT_POW = "SQUARE"
-TT_MOD = "MOD"
-TT_EQ = "EQ"
-TT_NE = "NE"
-TT_LE = "LE"
-TT_GE = "GE"
-TT_LTE = "LTE"
-TT_GTE = "GTE"
-
-# variable tokens
-
-TT_IDENTIFIER = "IDENTIFIER"
-TT_KEYWORD = "KEYWORD"
-TT_EQUAL = "EQUAL"
-KEYWORDS = [
-    "var",
-    "and",
-    "or",
-    "not"
-]
 
 
 class Token:
@@ -233,15 +243,32 @@ class Lexer:
         self.advance()
         if self.current_char == "=":
             return Token(TT_NE, pos_start=pos_start, pos_end=self.pos), None
+        self.advance()
+        return ExpectedCharError(pos_start, self.pos, "'=' afer '!'")
 
     def make_equals(self):
-        pass
+        tok_type = TT_EQ
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == "=":
+            tok_type = TT_EE
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
     def make_less_than(self):
-        pass
+        tok_type = TT_LT
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == "=":
+            tok_type = TT_LTE
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
     def make_greate_than(self):
-        pass
+        tok_type = TT_GT
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == "=":
+            tok_type = TT_GTE
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos), None
 
 
 class NumberNode:
@@ -399,7 +426,6 @@ class Parser:
             var_name = self.current_tok
             self.advance()
 
-            # 检查是否有等号
             if self.current_tok.type != TT_EQUAL:
                 return res.failure(
                     InvalidSyntaxError(
@@ -625,10 +651,13 @@ def run(fn, text):
     tokens, error = lexer.make_tokens()
     if error: return None, error
 
-    # Generate AST
+    print("\033[32m" + "DEBUG: Lexical Analysis OK！" + "\033[39m")
+
     parser = Parser(tokens)
     ast = parser.parse()
     if ast.error: return None, ast.error
+
+    print("\033[32m" + "DEBUG: Syntax Analysis OK！" + "\033[39m")
 
     interpreter = Interpreter()
     context = Context("<program>")
