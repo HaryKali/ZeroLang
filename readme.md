@@ -12,4 +12,5 @@ A simple programing language based on basic
 ## 2. function
 * Support basic operations
 * Supports variable definition
+* supprort comparison operations
 
