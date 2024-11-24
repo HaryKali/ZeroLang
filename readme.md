@@ -11,7 +11,7 @@ A simple programing language based on basic
       python3 shell.py 
 
 
-## 2. function
+## 2. functions
 * Support basic operations
 * Support variable definition
 * Support comparison operations
