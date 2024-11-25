@@ -26,7 +26,11 @@ KEYWORDS = [
     'if',
     'then',
     'elif',
-    'else'
+    'else',
+    "for",
+    "to",
+    "step",
+    "while"
 ]
 from strings_with_arrows import *
 
