@@ -16,4 +16,19 @@ A simple programing language based on basic
 * Support variable definition
 * Support comparison operations
 * Support if statement
+* Support while and for(you can check the grammar.txt!)
+```
+  #for loop:
+  var res=0
+  for i=0 to 6 then var res=res+i
+  
+  #while loop:
+  var res=0
+  while res<10000 then var res=res+1
+  
+  
+```
+
+## 3. Recently：
+* working on while and for !
 
