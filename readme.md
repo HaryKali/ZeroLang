@@ -17,3 +17,6 @@ A simple programing language based on basic
 * Support comparison operations
 * Support if statement
 
+## 3. Recently：
+* working on while and for !
+
