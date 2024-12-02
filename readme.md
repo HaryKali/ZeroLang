@@ -16,7 +16,7 @@ A simple programing language based on basic
 * Support variable definition
 * Support comparison operations
 * Support if statement
-* Support while and for(you can check the grammar.txt!)
+* Support while and for(check more detail in grammar.txt )
 ```
   #for loop:
   var res=0
@@ -32,6 +32,4 @@ A simple programing language based on basic
 ## 3. Recently：
 * working on while and for !
 
-## 3. Recently：
-* working on while and for !
 
