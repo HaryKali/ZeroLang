@@ -30,6 +30,6 @@ A simple programing language based on basic
 ```
 
 ## 3. Recently：
-* working on while and for !
+* working on function
 
 
