@@ -18,6 +18,8 @@ TT_GTE = 'GTE'
 TT_EOF = 'EOF'
 TT_INT = "INT"
 TT_MOD = "MOD"
+TT_ARROW = "TT_ARROW"
+TT_COMMA = "TT_COMMA"
 KEYWORDS = [
     'var',
     'and',
@@ -30,7 +32,8 @@ KEYWORDS = [
     "for",
     "to",
     "step",
-    "while"
+    "while",
+    "func"
 ]
 from strings_with_arrows import *
 
@@ -162,9 +165,11 @@ class Lexer:
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
+            # elif self.current_char == '-':
+            #     tokens.append(Token(TT_MINUS, pos_start=self.pos))
+            #     self.advance()
             elif self.current_char == '-':
-                tokens.append(Token(TT_MINUS, pos_start=self.pos))
-                self.advance()
+                tokens.append(self.make_minus_or_arrorw())
             elif self.current_char == '*':
                 tokens.append(Token(TT_MUL, pos_start=self.pos))
                 self.advance()
@@ -184,6 +189,9 @@ class Lexer:
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == ',':
+                tokens.append(Token(TT_COMMA, pos_start=self.pos))
+                self.advance()
             elif self.current_char == '!':
                 token, error = self.make_not_equals()
                 if error: return [], error
@@ -202,6 +210,15 @@ class Lexer:
 
         tokens.append(Token(TT_EOF, pos_start=self.pos))
         return tokens, None
+
+    def make_minus_or_arrorw(self):
+        tok_type = TT_MINUS
+        pos_start = self.pos.copy()
+        self.advance()
+        if self.current_char == ">":
+            self.advance()
+            tok_type = TT_ARROW
+        return Token(pos_start=pos_start, pos_end=self.pos, type_=tok_type)
 
     def make_number(self):
         num_str = ''
