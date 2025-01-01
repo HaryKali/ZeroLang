@@ -31,5 +31,7 @@ A simple programing language based on basic
 
 ## 3. Recently：
 * working on function
+* function lexer is ready
+* Happy New Year 2025
 
 
