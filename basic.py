@@ -553,6 +553,11 @@ class Parser:
             if res.error: return res
             return res.success(while_expr)
 
+        elif tok.matches(TT_KEYWORD, 'fun'):
+            while_expr = res.register(self.func_def())
+            if res.error: return res
+            return res.success(func_def)
+
         return res.failure(InvalidSyntaxError(
             tok.pos_start, tok.pos_end,
             "Expected int, float, identifier, '+', '-', '('"
@@ -758,6 +763,91 @@ class Parser:
 
         return res.success(left)
 
+    def func_def(self):
+        res = ParseResult()
+        if not self.current_tok.matches(TT_KEYWORD, "fun"):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start,
+                self.current_tok.pos_end,
+                f"Expected 'fun' "
+            ))
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_IDENTIFIER:
+            var_name_tok = self.current_tok
+            res.register_advancement()
+            self.advance()
+        if self.current_tok.type != TT_LPAREN:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start,
+                self.current_tok.pos_end,
+                f"Expected '(' "
+            ))
+        else:
+            var_name_tok = None
+            if self.current_tok.type != TT_LPAREN:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start,
+                    self.current_tok.pos_end,
+                    f"Expected identifier or '(' "
+                ))
+        res.register_advancement()
+        self.advance()
+
+        arg_name_toks = []
+        if self.current_tok.type == TT_IDENTIFIER:
+            arg_name_toks.append(self.current_tok)
+            res.register_advancement()
+            self.advance()
+
+            while self.current_tok.type == TT_COMMA:
+                res.register_advancement()
+                self.advance()
+                if self.current_tok.type != TT_IDENTIFIER:
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start,
+                        self.current_tok.pos_end,
+                        f"Expected 'identifier' "
+                    ))
+
+                arg_name_toks.append(self.current_tok)
+                res.register_advancement()
+                self.advance()
+        if self.current_tok.type != TT_RPAREN:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start,
+                self.current_tok.pos_end,
+                f"Expected , or ')' "
+            ))
+        else:
+            if self.current_tok.type != TT_RPAREN:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start,
+                    self.current_tok.pos_end,
+                    f"Expected identifier or ')' "
+                ))
+            res.register_advancement()
+            self.advance()
+
+        if self.current_tok.type!=TT_ARROW:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start,
+                self.current_tok.pos_end,
+                f"Expected '->' "
+            ))
+        res.register_advancement()
+        self.advance()
+        node_to_return=res.register(self.expr())
+        if res.error: return res
+
+        return res.success(
+            FunDefNode(
+                var_name_tok,
+                arg_name_toks,
+                node_to_return
+            )
+        )
 
 class RTResult:
     def __init__(self):
