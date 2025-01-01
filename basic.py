@@ -554,7 +554,7 @@ class Parser:
             return res.success(while_expr)
 
         elif tok.matches(TT_KEYWORD, 'fun'):
-            while_expr = res.register(self.func_def())
+            func_def = res.register(self.func_def())
             if res.error: return res
             return res.success(func_def)
 
