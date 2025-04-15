@@ -20,6 +20,7 @@ TT_INT = "INT"
 TT_MOD = "MOD"
 TT_ARROW = "TT_ARROW"
 TT_COMMA = "TT_COMMA"
+
 KEYWORDS = [
     'var',
     'and',
@@ -402,6 +403,33 @@ class WhileNode:
         self.pos_start = self.condition_node.pos_start
         self.pos_end = self.body_node.pos_end
 
+
+class FuncDefNode:
+    def __init__(self, var_name_tok, arg_name_toks, body_node):
+        self.var_name_tok = var_name_tok
+        self.arg_name_toks = arg_name_toks
+        self.body_node = body_node
+
+        if self.var_name_tok:
+            self.pos_start = self.var_name_tok.pos_start
+        elif len(self.arg_name_toks) > 0:
+            self.pos_start = self.arg_name_toks[0].pos_start
+        else:
+            self.pos_start = self.body_node.pos_start
+
+        self.pos_end=self.body_node.pos_end
+
+
+class CallNode:
+    def __init__(self,node_to_call,arg_nodes):
+        self.node_to_call=node_to_call
+        self.arg_nodes=arg_nodes
+
+        self.pos_start=self.node_to_call.pos_start
+        if len(self.arg_nodes)>0:
+            self.pos_end=self.arg_nodes[len(self.arg_nodes)-1].pos_end
+        else:
+            self.pos_end=self.node_to_call.pos_end
 
 class ParseResult:
     def __init__(self):
@@ -830,7 +858,7 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-        if self.current_tok.type!=TT_ARROW:
+        if self.current_tok.type != TT_ARROW:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start,
                 self.current_tok.pos_end,
@@ -838,7 +866,7 @@ class Parser:
             ))
         res.register_advancement()
         self.advance()
-        node_to_return=res.register(self.expr())
+        node_to_return = res.register(self.expr())
         if res.error: return res
 
         return res.success(
@@ -848,6 +876,7 @@ class Parser:
                 node_to_return
             )
         )
+
 
 class RTResult:
     def __init__(self):
@@ -1159,9 +1188,8 @@ def run(fn, text):
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
     if error: return None, error
-    print(tokens)
     print("\033[32m" + "DEBUG: Lexical Analysis OK！" + "\033[39m")
-
+    print(tokens)
     parser = Parser(tokens)
     ast = parser.parse()
     if ast.error: return None, ast.error
