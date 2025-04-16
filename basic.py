@@ -536,6 +536,48 @@ class Parser:
             if res.error: return res
 
         return res.success(IfNode(cases, else_case))
+    def call(self):
+        res=ParseResult()
+        atom=res.register(self.atom())
+        if res.error: return res
+
+        if self.current_tok.type==TT_LPAREN:
+            res.register_advancement()
+            self.advance()
+            arg_nodes=[]
+
+            if self.current_tok.type==TT_RPAREN:
+                res.register_advancement()
+                self.advance()
+            else:
+                arg_nodes.append(res.register(self.expr()))
+                if res.error:
+                    return res.failure(
+                        InvalidSyntaxError(
+                            self.current_tok.pos_start, not self.current_tok.pos_end,
+                            "Expected ')', 'var', 'for' , 'while' , 'func' , 'int', 'float', identifier'"
+                        )
+
+
+                    )
+                while self.current_tok==TT_COMMA:
+                    res.register_advancement()
+                    self.advance()
+
+                    arg_nodes.append(res.register(self.expr()))
+
+                if self.current_tok!=TT_RPAREN:
+                    return res.failure(
+                        InvalidSyntaxError(
+                            self.current_tok.pos_start, not self.current_tok.pos_end,
+                            "Expected ')' or ','"
+                        )
+
+                    )
+                res.register_advancement()
+                self.advance()
+            return res.success(CallNode(atom,arg_nodes))
+        return res.success(atom)
 
     def atom(self):
         res = ParseResult()
@@ -581,7 +623,7 @@ class Parser:
             if res.error: return res
             return res.success(while_expr)
 
-        elif tok.matches(TT_KEYWORD, 'fun'):
+        elif tok.matches(TT_KEYWORD, 'func'):
             func_def = res.register(self.func_def())
             if res.error: return res
             return res.success(func_def)
@@ -592,7 +634,7 @@ class Parser:
         ))
 
     def power(self):
-        return self.bin_op(self.atom, (TT_POW,), self.factor)
+        return self.bin_op(self.call, (TT_POW,), self.factor)
 
     def factor(self):
         res = ParseResult()
@@ -793,11 +835,11 @@ class Parser:
 
     def func_def(self):
         res = ParseResult()
-        if not self.current_tok.matches(TT_KEYWORD, "fun"):
+        if not self.current_tok.matches(TT_KEYWORD, "func"):
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start,
                 self.current_tok.pos_end,
-                f"Expected 'fun' "
+                f"Expected 'func' "
             ))
         res.register_advancement()
         self.advance()
@@ -822,6 +864,8 @@ class Parser:
                 ))
         res.register_advancement()
         self.advance()
+
+
 
         arg_name_toks = []
         if self.current_tok.type == TT_IDENTIFIER:
@@ -894,6 +938,11 @@ class RTResult:
     def failure(self, error):
         self.error = error
         return self
+
+
+class Value:
+    pass
+
 
 
 class Number:
@@ -1193,7 +1242,6 @@ def run(fn, text):
     parser = Parser(tokens)
     ast = parser.parse()
     if ast.error: return None, ast.error
-
     print("\033[32m" + "DEBUG: Syntax Analysis OK！" + "\033[39m")
 
     interpreter = Interpreter()

@@ -10,7 +10,7 @@ signal.signal(signal.SIGINT,signal_cplusz)
 
 while True:
 
-    text = input("ZeroLang >")
+    text = input("ZeroLang (Debug) >")
     result, error = basic.run("<stdin>", text)
     if error:
         print(error.as_string())
