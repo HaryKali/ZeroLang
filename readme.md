@@ -16,7 +16,8 @@ A simple programing language based on basic
 * Support variable definition
 * Support comparison operations
 * Support if statement
-* Support while and for(check more detail in grammar.txt )
+* Support while and for
+* Support defined function and call function
 ```
   #for loop:
   var res=0
@@ -26,6 +27,10 @@ A simple programing language based on basic
   var res=0
   while res<10000 then var res=res+1
   
+  #func
+  func add(a,b)-> a+b
+  add(a+b)
+  var sum=add(a+b)
   
 ```
 
@@ -33,6 +38,6 @@ A simple programing language based on basic
 * working on function
 * function lexer is ready
 * Happy New Year 2025
-* I am back!! 
+
 
 
