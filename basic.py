@@ -20,6 +20,7 @@ TT_INT = "INT"
 TT_MOD = "MOD"
 TT_ARROW = "TT_ARROW"
 TT_COMMA = "TT_COMMA"
+TT_STRING = "TT_STRING"
 
 KEYWORDS = [
     'var',
@@ -34,7 +35,7 @@ KEYWORDS = [
     "to",
     "step",
     "while",
-    "func"
+    "func",
 ]
 from strings_with_arrows import *
 
@@ -166,9 +167,8 @@ class Lexer:
             elif self.current_char == '+':
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
-            # elif self.current_char == '-':
-            #     tokens.append(Token(TT_MINUS, pos_start=self.pos))
-            #     self.advance()
+
+
             elif self.current_char == '-':
                 tokens.append(self.make_minus_or_arrorw())
             elif self.current_char == '*':
@@ -203,6 +203,10 @@ class Lexer:
                 tokens.append(self.make_less_than())
             elif self.current_char == '>':
                 tokens.append(self.make_greater_than())
+            elif self.current_char == '"':
+                tokens.append(self.make_string())
+
+
             else:
                 pos_start = self.pos.copy()
                 char = self.current_char
@@ -211,6 +215,30 @@ class Lexer:
 
         tokens.append(Token(TT_EOF, pos_start=self.pos))
         return tokens, None
+
+    def make_string(self):
+        escape_characters = {
+            "n": "\n",
+            "t": "\t"
+        }
+        string_res = ""
+        pos_start = self.pos.copy()
+        escape_character = False
+        self.advance()
+
+        while self.current_char is not None and (self.current_char != '"' or escape_character):
+            if escape_character:
+                string_res += escape_characters.get(self.current_char, self.current_char)
+                escape_character = False
+            else:
+                if self.current_char == '\\':
+                    escape_character = True
+                else:
+                    string_res += self.current_char
+            self.advance()
+
+        self.advance()  # 跳过最后的引号
+        return Token(TT_STRING, string_res, pos_start=pos_start, pos_end=self.pos)
 
     def make_minus_or_arrorw(self):
         tok_type = TT_MINUS
@@ -322,6 +350,16 @@ class CallNode:
 
 
 class NumberNode:
+    def __init__(self, tok):
+        self.tok = tok
+
+        self.pos_start = self.tok.pos_start
+        self.pos_end = self.tok.pos_end
+
+    def __repr__(self):
+        return f'{self.tok}'
+
+class StringNode:
     def __init__(self, tok):
         self.tok = tok
 
@@ -598,6 +636,11 @@ class Parser:
             res.register_advancement()
             self.advance()
             return res.success(NumberNode(tok))
+        if tok.type ==TT_STRING:
+            res.register_advancement()
+            self.advance()
+            return res.success(StringNode(tok))
+
 
         elif tok.type == TT_IDENTIFIER:
             res.register_advancement()
@@ -1021,6 +1064,36 @@ class Value:
             self.context
         )
 
+class String(Value):
+    def __init__(self, value):
+        self.value = value
+        self.set_pos()
+        self.set_context()
+
+    def set_pos(self, pos_start=None, pos_end=None):
+        self.pos_start = pos_start
+        self.pos_end = pos_end
+        return self
+
+    def set_context(self, context=None):
+        self.context = context
+        return self
+
+    def added_to(self, other):
+        if isinstance(other, String):
+            return String(self.value + other.value).set_context(self.context), None
+        else:
+            return None, self.illegal_operation(self.pos_start, other.pos_end)
+    def multed_by(self, other):
+        if isinstance(other, Number):
+            return String(self.value * other.value).set_context(self.context), None
+        else:
+            return None, self.illegal_operation(self.pos_start, other.pos_end)
+
+
+    def __repr__(self):
+        return self.value
+
 
 class Number(Value):
     def __init__(self, value):
@@ -1200,7 +1273,7 @@ class Function(Value):
 
 
 class SymbolTable:
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         self.symbols = {}
         self.parent = None
 
@@ -1274,6 +1347,12 @@ class Interpreter:
     def visit_NumberNode(self, node, context):
         return RTResult().success(
             Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
+        )
+
+    def visit_StringNode(self,node,context):
+        return RTResult().success(
+            String(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
+
         )
 
     def visit_VarAccessNode(self, node, context):
@@ -1380,7 +1459,7 @@ class Interpreter:
     def visit_FunDefNode(self, node, context):
 
         res = RTResult()
-        func_name =node.var_name_tok.value if node.var_name_tok else None
+        func_name = node.var_name_tok.value if node.var_name_tok else None
         body_node = node.body_node
         arg_names = [arg_name.value for arg_name in node.arg_name_toks]
         func_value = Function(func_name, body_node, arg_names).set_context(context).set_pos(
@@ -1395,13 +1474,13 @@ class Interpreter:
         args = []
         value_to_call = res.register(self.visit(node.node_to_call, context))
         if res.error: return res
-        value_to_call=value_to_call.copy().set_pos(node.pos_start,node.pos_end)
+        value_to_call = value_to_call.copy().set_pos(node.pos_start, node.pos_end)
 
         for arg_node in node.arg_nodes:
-            args.append(res.register(self.visit(arg_node,context)))
+            args.append(res.register(self.visit(arg_node, context)))
             if res.error: return res
 
-        return_value =res.register(value_to_call.execute(args))
+        return_value = res.register(value_to_call.execute(args))
         if res.error: return res
         return res.success(return_value)
 
