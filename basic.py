@@ -974,6 +974,8 @@ class Parser:
 
 
 class RTResult:
+
+
     def __init__(self):
         self.value = None
         self.error = None
@@ -1090,6 +1092,11 @@ class String(Value):
         else:
             return None, self.illegal_operation(self.pos_start, other.pos_end)
 
+    def copy(self):
+        copy = String(self.value)
+        copy.set_pos(self.pos_start, self.pos_end)
+        copy.set_context(self.context)
+        return copy
 
     def __repr__(self):
         return self.value
