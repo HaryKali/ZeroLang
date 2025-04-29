@@ -21,6 +21,8 @@ TT_MOD = "MOD"
 TT_ARROW = "TT_ARROW"
 TT_COMMA = "TT_COMMA"
 TT_STRING = "TT_STRING"
+TT_LSQUARE = "LSQUARE"
+TT_RSQUARE = "RSQUARE"
 
 KEYWORDS = [
     'var',
@@ -205,6 +207,12 @@ class Lexer:
                 tokens.append(self.make_greater_than())
             elif self.current_char == '"':
                 tokens.append(self.make_string())
+            elif self.current_char == '[':
+                tokens.append(Token(TT_LSQUARE, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == ']':
+                tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
+                self.advance()
 
 
             else:
@@ -358,6 +366,7 @@ class NumberNode:
 
     def __repr__(self):
         return f'{self.tok}'
+
 
 class StringNode:
     def __init__(self, tok):
@@ -636,7 +645,7 @@ class Parser:
             res.register_advancement()
             self.advance()
             return res.success(NumberNode(tok))
-        if tok.type ==TT_STRING:
+        if tok.type == TT_STRING:
             res.register_advancement()
             self.advance()
             return res.success(StringNode(tok))
@@ -975,7 +984,6 @@ class Parser:
 
 class RTResult:
 
-
     def __init__(self):
         self.value = None
         self.error = None
@@ -1066,6 +1074,7 @@ class Value:
             self.context
         )
 
+
 class String(Value):
     def __init__(self, value):
         self.value = value
@@ -1086,6 +1095,7 @@ class String(Value):
             return String(self.value + other.value).set_context(self.context), None
         else:
             return None, self.illegal_operation(self.pos_start, other.pos_end)
+
     def multed_by(self, other):
         if isinstance(other, Number):
             return String(self.value * other.value).set_context(self.context), None
@@ -1356,7 +1366,7 @@ class Interpreter:
             Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
 
-    def visit_StringNode(self,node,context):
+    def visit_StringNode(self, node, context):
         return RTResult().success(
             String(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
 
