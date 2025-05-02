@@ -1388,7 +1388,7 @@ class BaseFunction(Value):
         return new_context
 
     def check_args(self, arg_names, args):
-        res=RTResult()
+        res = RTResult()
         if len(args) > len(arg_names):
             return res.failure(RTError(
                 self.pos_start, self.pos_end,
@@ -1407,20 +1407,20 @@ class BaseFunction(Value):
             )
         return res.success(None)
 
-    def populate_args(self,arg_names,args,exec_ctx):
+    def populate_args(self, arg_names, args, exec_ctx):
         for i in range(len(args)):
             arg_name = arg_names[i]
             arg_value = args[i]
-            #maybe newcontext?
+            # maybe newcontext?
             arg_value.set_context(exec_ctx)
             exec_ctx.symbol_table.set(arg_name, arg_value)
-    def check_and_populate_args(self,arg_names,args,exec_ctx):
-        res=RTResult()
-        res.register(self.check_args(arg_names,args))
-        if res.error: return res
-        self.populate_args(arg_names,args,exec_ctx)
-        return res.success((None))
 
+    def check_and_populate_args(self, arg_names, args, exec_ctx):
+        res = RTResult()
+        res.register(self.check_args(arg_names, args))
+        if res.error: return res
+        self.populate_args(arg_names, args, exec_ctx)
+        return res.success((None))
 
 
 class Function(BaseFunction):
@@ -1433,7 +1433,7 @@ class Function(BaseFunction):
         res = RTResult()
         interpreter = Interpreter()
         exec_ctx = self.generate_new_context()
-        res.register(self.check_and_populate_args(self.arg_names,args,exec_ctx=exec_ctx))
+        res.register(self.check_and_populate_args(self.arg_names, args, exec_ctx=exec_ctx))
         value = res.register(interpreter.visit(self.body_node, exec_ctx))
         if res.error: return res
         return res.success(value)
@@ -1452,20 +1452,20 @@ class BuiltInFunction(BaseFunction):
     def __init__(self):
         super().__init__()
 
-    def execute(self,args):
-        res= RTResult()
-        exec_ctx=self.generate_new_context()
-        method_name= f"execute_{self.name}"
-        method=getattr(self,method_name,self.no_visit_method)
+    def execute(self, args):
+        res = RTResult()
+        exec_ctx = self.generate_new_context()
+        method_name = f"execute_{self.name}"
+        method = getattr(self, method_name, self.no_visit_method)
 
-        res.register(self.check_and_populate_args(method.arg_namse,args,exec_ctx))
+        res.register(self.check_and_populate_args(method.arg_namse, args, exec_ctx))
         if res.error: return res
 
-        return_value=res.register(method(exec_ctx))
+        return_value = res.register(method(exec_ctx))
         if res.error: return res
         return res.success(return_value)
 
-    def no_visit_method(self,node,context):
+    def no_visit_method(self, node, context):
         raise Exception(f"No execute_{self.name} method deined")
 
     def copy(self):
@@ -1474,9 +1474,26 @@ class BuiltInFunction(BaseFunction):
         copy.set_pos(self.pos_start, self.pos_end)
         return copy
 
+    def execute_print(self, exec_ctx):
+        print(str(exec_ctx.symbol_table.get("value")))
+        return RTResult().success(Number.null)
+
+    execute_print.arg_names = ["value"]
+
+    def execute_print_ret(self, exec_ctx):
+        return RTResult().success(String(str(exec_ctx.symbol_table.get("value"))))
+
+    execute_print_ret.arg_names = ["value"]
+
+    def execute_input(self, exec_ctx):
+        text = input()
+        return RTResult().success(String(text))
+
+    execute_input().arg_names = []
+
+
     def __repr__(self):
         return f"<Built-in function {self.name}>"
-
 
 
 class SymbolTable:
