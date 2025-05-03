@@ -1,7 +1,3 @@
-from operator import index
-
-from jinja2.runtime import new_context
-from numba.typed.listobject import new_list
 import os
 
 TT_FLOAT = 'FLOAT'
@@ -1206,6 +1202,9 @@ class List(Value):
         else:
             return None, Value.illegal_operation(self, other)
 
+    def __str__(self):
+        return f'{",".join([str(x) for x in self.elements])}'
+
     def __repr__(self):
         return f'[{",".join([str(x) for x in self.elements])}]'
 
@@ -1414,7 +1413,6 @@ class BaseFunction(Value):
         for i in range(len(args)):
             arg_name = arg_names[i]
             arg_value = args[i]
-            # maybe newcontext?
             arg_value.set_context(exec_ctx)
             exec_ctx.symbol_table.set(arg_name, arg_value)
 
@@ -1830,7 +1828,6 @@ class Interpreter:
         res = RTResult()
         args = []
 
-        # 不再 copy()，保留原函数引用
         value_to_call = res.register(self.visit(node.node_to_call, context))
         if res.error: return res
         value_to_call.set_pos(node.pos_start, node.pos_end).set_context(context)
@@ -1838,11 +1835,8 @@ class Interpreter:
         for arg_node in node.arg_nodes:
             args.append(res.register(self.visit(arg_node, context)))
             if res.error: return res
-
         return_value = res.register(value_to_call.execute(args))
         if res.error: return res
-
-        # 返回值可以 copy，因为它是新创建的，不会影响上下文
         return res.success(return_value.copy().set_pos(node.pos_start, node.pos_end).set_context(context))
 
 

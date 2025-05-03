@@ -1,9 +1,4 @@
 import ZeroLang
-import sys
-
-
-
-
 while True:
 
     text = input("ZeroLang (Debug) >")
