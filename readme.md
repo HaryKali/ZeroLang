@@ -1,3 +1,4 @@
+
 # ZeroLang(still woking on it!)
 
 ## 0. Introduction
@@ -147,6 +148,139 @@ add(2, 3)  # Returns 5
 
 ---
 
+## ⚙️ Built-in Functions
+
+ZeroLang provides several built-in functions for common operations:
+
+### `print(value)`
+
+Prints the value to the console.
+
+```plaintext
+print("Hello, World!")
+```
+
+---
+
+### `print_ret(value)`
+
+Returns the string representation of the value (does not print).
+
+```plaintext
+var msg = print_ret(123)
+```
+
+---
+
+### `input()`
+
+Prompts user for input as a string.
+
+```plaintext
+var name = input()
+```
+
+---
+
+### `input_int()`
+
+Prompts user for input until a valid integer is entered.
+
+```plaintext
+var age = input_int()
+```
+
+---
+
+### `clear()` / `cls()`
+
+Clears the terminal screen (cross-platform).
+
+```plaintext
+clear()
+cls()
+```
+
+---
+
+### `is_num(value)`
+
+Returns `True` if value is a number, otherwise `False`.
+
+```plaintext
+is_num(10)      # True
+is_num("abc")   # False
+```
+
+---
+
+### `is_str(value)`
+
+Returns `True` if value is a string.
+
+```plaintext
+is_str("hello")  # True
+```
+
+---
+
+### `is_list(value)`
+
+Returns `True` if value is a list.
+
+```plaintext
+is_list([1, 2, 3])  # True
+```
+
+---
+
+### `is_fun(value)`
+
+Returns `True` if value is a function.
+
+```plaintext
+var f = func(x) -> x + 1
+is_fun(f)  # True
+```
+
+---
+
+### `append(list, value)`
+
+Appends a value to the end of the list.
+
+```plaintext
+var l = [1, 2]
+append(l, 3)
+# l is now [1, 2, 3]
+```
+
+---
+
+### `pop(list, index)`
+
+Removes and returns the element at the given index.
+
+```plaintext
+var l = [5, 6, 7]
+pop(l, 1)  # returns 6, l becomes [5, 7]
+```
+
+---
+
+### `extend(listA, listB)`
+
+Extends `listA` by appending all elements from `listB`.
+
+```plaintext
+var a = [1]
+var b = [2, 3]
+extend(a, b)
+# a becomes [1, 2, 3]
+```
+
+---
+
 ## 🔍 Example Program
 
 ```plaintext
@@ -161,7 +295,3 @@ square(4)
 Lexical and syntax errors are handled by classes like `IllegalCharError`, `InvalidSyntaxError`, and `RTError`. They provide clear messages with line numbers and context arrows.
 
 ---
-
-
-
-
