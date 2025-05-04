@@ -25,6 +25,7 @@ TT_COMMA = "TT_COMMA"
 TT_STRING = "TT_STRING"
 TT_LSQUARE = "LSQUARE"
 TT_RSQUARE = "RSQUARE"
+TT_NEWLINE="NEWLINE"
 
 KEYWORDS = [
     'var',
@@ -40,6 +41,7 @@ KEYWORDS = [
     "step",
     "while",
     "func",
+    "end"
 ]
 from strings_with_arrows import *
 
@@ -215,7 +217,9 @@ class Lexer:
             elif self.current_char == ']':
                 tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
                 self.advance()
-
+            elif self.current_char==";\n":
+                tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
+                self.advance()
 
             else:
                 pos_start = self.pos.copy()
@@ -1547,6 +1551,7 @@ class BuiltInFunction(BaseFunction):
                 "First argument must be list",
                 exec_ctx
             ))
+
         list_.elements.append(value)
         return RTResult().success(Number.null)
 
@@ -1724,6 +1729,20 @@ class Interpreter:
 
         value.set_pos(node.pos_start, node.pos_end).set_context(context)
         return res.success(value)
+
+    # def visit_VarAccessNode(self, node, context):
+    #     res = RTResult()
+    #     var_name = node.var_name_tok.value
+    #     value = context.symbol_table.get(var_name)
+    #
+    #     if not value:
+    #         raise RTError(
+    #             node.pos_start, node.pos_end,
+    #             f"'{var_name}' is not defined",
+    #             context
+    #         )
+    #     value=value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
+    #     return res.success(value)
 
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
