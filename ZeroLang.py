@@ -26,7 +26,7 @@ TT_COMMA = "TT_COMMA"
 TT_STRING = "TT_STRING"
 TT_LSQUARE = "LSQUARE"
 TT_RSQUARE = "RSQUARE"
-TT_NEWLINE="NEWLINE"
+TT_NEWLINE = "NEWLINE"
 
 KEYWORDS = [
     'var',
@@ -218,7 +218,7 @@ class Lexer:
             elif self.current_char == ']':
                 tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
                 self.advance()
-            elif self.current_char==";\n":
+            elif self.current_char == ";\n":
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
                 self.advance()
 
@@ -543,6 +543,45 @@ class Parser:
         return res
 
     ###################################
+
+    def statement(self):
+        res = ParseResult()
+        statements = []
+        pos_start = self.current_tok.pos_start.copy()
+
+        while self.current_tok.type == TT_NEWLINE:
+            res.register_advancement()
+            self.advance()
+        statement = res.register(self.expr())
+        if res.error: return res
+        statements.append(statement)
+
+        more_statements = True
+
+        while True:
+            newline_count = 0
+            while self.current_tok.type == TT_NEWLINE:
+                res.register_advancement()
+                self.advance()
+                newline_count += 1
+
+            if newline_count == 0:
+                more_statements = False
+
+            if not more_statements:
+                break
+
+            if not statement:
+                self.reverse(res.to_reverse_count)
+                more_statements = False
+                continue
+            statements.append(statement)
+
+        return res.success(ListNode(
+            statements,
+            pos_start,
+            self.current_tok.pos_end.copy()
+        ))
 
     def if_expr(self):
         res = ParseResult()
@@ -1610,18 +1649,19 @@ class BuiltInFunction(BaseFunction):
 
     execute_extend.arg_names = ["listA", "listB"]
 
-BuiltInFunction.print       = BuiltInFunction("print")
-BuiltInFunction.print_ret   = BuiltInFunction("print_ret")
-BuiltInFunction.input       = BuiltInFunction("input")
-BuiltInFunction.input_int   = BuiltInFunction("input_int")
-BuiltInFunction.clear       = BuiltInFunction("clear")
-BuiltInFunction.is_number   = BuiltInFunction("is_number")
-BuiltInFunction.is_string   = BuiltInFunction("is_string")
-BuiltInFunction.is_list     = BuiltInFunction("is_list")
+
+BuiltInFunction.print = BuiltInFunction("print")
+BuiltInFunction.print_ret = BuiltInFunction("print_ret")
+BuiltInFunction.input = BuiltInFunction("input")
+BuiltInFunction.input_int = BuiltInFunction("input_int")
+BuiltInFunction.clear = BuiltInFunction("clear")
+BuiltInFunction.is_number = BuiltInFunction("is_number")
+BuiltInFunction.is_string = BuiltInFunction("is_string")
+BuiltInFunction.is_list = BuiltInFunction("is_list")
 BuiltInFunction.is_function = BuiltInFunction("is_function")
-BuiltInFunction.append      = BuiltInFunction("append")
-BuiltInFunction.pop         = BuiltInFunction("pop")
-BuiltInFunction.extend      = BuiltInFunction("extend")
+BuiltInFunction.append = BuiltInFunction("append")
+BuiltInFunction.pop = BuiltInFunction("pop")
+BuiltInFunction.extend = BuiltInFunction("extend")
 
 
 class SymbolTable:
@@ -1884,7 +1924,6 @@ global_symbol_table.set("is_fun", BuiltInFunction.is_function)
 global_symbol_table.set("append", BuiltInFunction.append)
 global_symbol_table.set("pop", BuiltInFunction.pop)
 global_symbol_table.set("exetend", BuiltInFunction.extend)
-
 
 
 def run(fn, text):
