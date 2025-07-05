@@ -1,3 +1,4 @@
+import math
 import os
 
 TT_FLOAT = 'FLOAT'
@@ -1357,6 +1358,9 @@ class Number(Value):
     def notted(self):
         return Number(1 if self.value == 0 else 0).set_context(self.context), None
 
+    def math_PI(self):
+        return math.pi
+
     def copy(self):
         copy = Number(self.value)
         copy.set_pos(self.pos_start, self.pos_end)
@@ -1866,7 +1870,7 @@ global_symbol_table.set("True", Number.true)
 global_symbol_table.set("NULL", Number.null)
 global_symbol_table.set("FALSE", Number.false)
 global_symbol_table.set("TRUE", Number.true)
-# global_symbol_table.set("MATH_PI", Number.math_PI)
+global_symbol_table.set("MATH_PI", Number.math_PI)
 global_symbol_table.set("print", BuiltInFunction.print)
 global_symbol_table.set("print_ret", BuiltInFunction.print_ret)
 global_symbol_table.set("input", BuiltInFunction.input)
