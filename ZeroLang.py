@@ -221,6 +221,10 @@ class Lexer:
             elif self.current_char == ";\n":
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == ";":
+                tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
+                self.advance()
+
 
             else:
                 pos_start = self.pos.copy()
@@ -502,11 +506,27 @@ class ParseResult:
         self.error = None
         self.node = None
         self.advance_count = 0
+        self.to_reverse_count = 0
+        self.last_registered_advance_count = 0
 
     def register_advancement(self):
         self.advance_count += 1
 
     def register(self, res):
+        self.last_registered_advance_count = res.advance_count
+        self.advance_count += res.advance_count
+        if res.error: self.error = res.error
+        return res.node
+
+    def try_register(self, res):
+        if res.error:
+            self.to_reverse_count = res.advance_count
+            return None
+        return self.register(res)
+
+
+    def register(self, res):
+        self.last_register_advancement_count = self.advance_count
         self.advance_count += res.advance_count
         if res.error: self.error = res.error
         return res.node
@@ -529,12 +549,22 @@ class Parser:
 
     def advance(self, ):
         self.tok_idx += 1
-        if self.tok_idx < len(self.tokens):
-            self.current_tok = self.tokens[self.tok_idx]
+        # if self.tok_idx < len(self.tokens):
+        #     self.current_tok = self.tokens[self.tok_idx]
+        self.update_current_tok()
         return self.current_tok
 
+    def reverse(self,amount=1):
+        self.tok_idx-=amount
+        self.update_current_tok()
+        return self.current_tok
+
+    def update_current_tok(self):
+        if self.tok_idx < len(self.tokens):
+            self.current_tok = self.tokens[self.tok_idx]
+
     def parse(self):
-        res = self.expr()
+        res = self.statements()
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
@@ -542,40 +572,45 @@ class Parser:
             ))
         return res
 
-    ###################################
-
-    def statement(self):
+    def statements(self):
         res = ParseResult()
         statements = []
         pos_start = self.current_tok.pos_start.copy()
 
+        # 跳过所有开头的换行符
         while self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
+
+        # 解析第一个语句
         statement = res.register(self.expr())
-        if res.error: return res
+        if res.error:
+            return res
         statements.append(statement)
 
         more_statements = True
-
-        while True:
+        while more_statements:
             newline_count = 0
+
+            # 跳过连续的换行符
             while self.current_tok.type == TT_NEWLINE:
                 res.register_advancement()
                 self.advance()
                 newline_count += 1
 
-            if newline_count == 0:
-                more_statements = False
-
-            if not more_statements:
-                break
-
-            if not statement:
-                self.reverse(res.to_reverse_count)
+            # 如果遇到EOF或没有换行符，结束解析
+            if self.current_tok.type == TT_EOF or newline_count == 0:
                 more_statements = False
                 continue
-            statements.append(statement)
+
+            # 尝试解析下一个语句
+            statement = res.try_register(self.expr())
+            if statement:
+                statements.append(statement)
+            else:
+                # 如果解析失败，回退到上次成功位置
+                self.reverse(res.to_reverse_count)
+                more_statements = False
 
         return res.success(ListNode(
             statements,
@@ -1944,3 +1979,6 @@ def run(fn, text):
     result = interpreter.visit(ast.node, context)
 
     return result.value, result.error
+
+
+
