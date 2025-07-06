@@ -2,6 +2,7 @@ import ZeroLang
 while True:
 
     text = input("ZeroLang (Debug) >")
+    if text == "": continue
     result, error = ZeroLang.run("<stdin>", text)
 
     if error:
