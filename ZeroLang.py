@@ -766,7 +766,6 @@ class Parser:
         res.register_advancement()
         self.advance()
 
-        # 处理多行语句块
         if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
@@ -775,7 +774,6 @@ class Parser:
             if res.error: return res
             cases.append((condition, statements))
 
-            # 解析后续的 elif/else 分支
             if self.current_tok.matches(TT_KEYWORD, "end"):
                 res.register_advancement()
                 self.advance()
@@ -786,12 +784,11 @@ class Parser:
                 cases.extend(new_cases)
                 else_case = new_else_case
         else:
-            # 处理单行表达式
+
             expr = res.register(self.expr())
             if res.error: return res
             cases.append((condition, expr))
 
-            # 解析后续的 elif/else 分支
             all_cases = res.register(self.if_expr_b_or_c())
             if res.error: return res
             new_cases, new_else_case = all_cases
@@ -805,7 +802,6 @@ class Parser:
         cases = []
         else_case = None
 
-        # 修复：使用正确的 'elif' 关键字（小写）
         if self.current_tok.matches(TT_KEYWORD, 'elif'):
             all_cases = res.register(self.if_expr_cases("elif"))
             if res.error: return res
@@ -826,7 +822,6 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            # 处理多行 else 块
             if self.current_tok.type == TT_NEWLINE:
                 res.register_advancement()
                 self.advance()
@@ -851,18 +846,15 @@ class Parser:
         atom = res.register(self.atom())
         if res.error: return res
 
-        # 如果遇到 ( ，说明是函数调用
         if self.current_tok.type == TT_LPAREN:
             res.register_advancement()
             self.advance()
             arg_nodes = []
 
-            # 如果直接遇到 )，说明是无参数调用
             if self.current_tok.type == TT_RPAREN:
                 res.register_advancement()
                 self.advance()
             else:
-                # 否则，先解析第一个参数
                 arg_nodes.append(res.register(self.expr()))
                 if res.error:
                     return res.failure(
@@ -872,7 +864,6 @@ class Parser:
                         )
                     )
 
-                # 继续解析更多参数，只要还有逗号
                 while self.current_tok.type == TT_COMMA:
                     res.register_advancement()
                     self.advance()
@@ -880,7 +871,6 @@ class Parser:
                     arg_nodes.append(res.register(self.expr()))
                     if res.error: return res
 
-                # 参数解析完后，必须以 ) 结束
                 if self.current_tok.type != TT_RPAREN:
                     return res.failure(
                         InvalidSyntaxError(
@@ -892,10 +882,8 @@ class Parser:
                 res.register_advancement()
                 self.advance()
 
-            # 返回函数调用节点
             return res.success(CallNode(atom, arg_nodes))
 
-        # 如果没有遇到 ( ，就只是一个普通表达式
         return res.success(atom)
 
     def atom(self):
@@ -1036,7 +1024,6 @@ class Parser:
                     )
                 )
 
-            # 继续解析更多参数，只要还有逗号
             while self.current_tok.type == TT_COMMA:
                 res.register_advancement()
                 self.advance()
@@ -1044,7 +1031,6 @@ class Parser:
                 element_nodes.append(res.register(self.expr()))
                 if res.error: return res
 
-            # 参数解析完后，必须以 ) 结束
             if self.current_tok.type != TT_RSQUARE:
                 return res.failure(
                     InvalidSyntaxError(
