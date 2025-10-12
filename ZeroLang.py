@@ -1246,24 +1246,20 @@ class Parser:
             ))
         res.register_advancement()
         self.advance()
+
         var_name_tok = None
         if self.current_tok.type == TT_IDENTIFIER:
             var_name_tok = self.current_tok
             res.register_advancement()
             self.advance()
+
         if self.current_tok.type != TT_LPAREN:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start,
                 self.current_tok.pos_end,
                 f"Expected '(' "
             ))
-        else:
-            if self.current_tok.type != TT_LPAREN:
-                return res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start,
-                    self.current_tok.pos_end,
-                    f"Expected identifier or '(' "
-                ))
+
         res.register_advancement()
         self.advance()
 
@@ -1280,27 +1276,21 @@ class Parser:
                     return res.failure(InvalidSyntaxError(
                         self.current_tok.pos_start,
                         self.current_tok.pos_end,
-                        f"Expected 'identifier' "
+                        f"Expected identifier"
                     ))
-
                 arg_name_toks.append(self.current_tok)
                 res.register_advancement()
                 self.advance()
+
         if self.current_tok.type != TT_RPAREN:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start,
                 self.current_tok.pos_end,
-                f"Expected , or ')' "
+                f"Expected ')'"
             ))
-        else:
-            if self.current_tok.type != TT_RPAREN:
-                return res.failure(InvalidSyntaxError(
-                    self.current_tok.pos_start,
-                    self.current_tok.pos_end,
-                    f"Expected identifier or ')' "
-                ))
-            res.register_advancement()
-            self.advance()
+
+        res.register_advancement()
+        self.advance()
 
         if self.current_tok.type == TT_ARROW:
             res.register_advancement()
@@ -1315,7 +1305,7 @@ class Parser:
                 False
             ))
 
-        if self.current_tok.type == TT_ARROW or self.current_tok.type == TT_NEWLINE:
+        if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
@@ -1330,18 +1320,18 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-            res.register_advancement()
-            self.advance()
-            if res.error: return res
+            return res.success(FuncDefNode(
+                var_name_tok,
+                arg_name_toks,
+                body,
+                True
+            ))
 
-            return res.success(
-                FunDefNode(
-                    var_name_tok,
-                    arg_name_toks,
-                    body,
-                    True
-                )
-            )
+        return res.failure(InvalidSyntaxError(
+            self.current_tok.pos_start,
+            self.current_tok.pos_end,
+            f"Expected '->' or newline"
+        ))
 
 
 class RTResult:
@@ -1729,9 +1719,11 @@ class Function(BaseFunction):
         interpreter = Interpreter()
         exec_ctx = self.generate_new_context()
         res.register(self.check_and_populate_args(self.arg_names, args, exec_ctx=exec_ctx))
+        if res.error: return res
         value = res.register(interpreter.visit(self.body_node, exec_ctx))
         if res.error: return res
-        return res.success(Number.null if self.should_return_null else value.value)
+        # return res.success(Number.null if self.should_return_null else value)
+        return res.success(value)
 
     def copy(self):
         copy = Function(self.name, self.body_node, self.arg_names, self.should_return_null)
@@ -2142,7 +2134,7 @@ class Interpreter:
 
         return res.success(None)
 
-    def visit_FunDefNode(self, node, context):
+    def visit_FuncDefNode(self, node, context):
         # Here we are not sure about return
         should_return_null = True
         res = RTResult()
