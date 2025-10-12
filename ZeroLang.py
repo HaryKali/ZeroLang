@@ -460,9 +460,8 @@ class IfNode:
         self.pos_end = (self.else_case or self.cases[-1][0]).pos_end
 
 
-
 class ForNode:
-    def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node,should_return_null):
+    def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
         self.var_name_tok = var_name_tok
         self.start_value_node = start_value_node
         self.end_value_node = end_value_node
@@ -474,7 +473,7 @@ class ForNode:
 
 
 class WhileNode:
-    def __init__(self, condition_node, body_node,should_return_null):
+    def __init__(self, condition_node, body_node, should_return_null):
         self.condition_node = condition_node
         self.body_node = body_node
         self.should_return_null = should_return_null
@@ -533,7 +532,6 @@ class ParseResult:
             return None
         return self.register(res)
 
-
     def register(self, res):
         self.last_register_advancement_count = self.advance_count
         self.advance_count += res.advance_count
@@ -563,8 +561,8 @@ class Parser:
         self.update_current_tok()
         return self.current_tok
 
-    def reverse(self,amount=1):
-        self.tok_idx-=amount
+    def reverse(self, amount=1):
+        self.tok_idx -= amount
         self.update_current_tok()
         return self.current_tok
 
@@ -623,12 +621,13 @@ class Parser:
         ))
 
     def if_expr(self):
-        res=ParseResult()
-        all_cases=res.register(self.if_expr_cases("if"))
+        res = ParseResult()
+        all_cases = res.register(self.if_expr_cases("if"))
         if res.error: return res
 
-        cases,else_case=all_cases
-        return res.success(IfNode(cases,else_case))
+        cases, else_case = all_cases
+        return res.success(IfNode(cases, else_case))
+
     # def if_expr_b(self):
     #     return self.if_expr_cases("elif")
     #
@@ -1108,32 +1107,33 @@ class Parser:
                 f"Expected 'THEN'"
             ))
 
-        if self.current_tok.type ==TT_NEWLINE:
+        if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
-            body=res.register(self.statements())
+            body = res.register(self.statements())
             if res.error: return res
 
             if not self.current_tok.matches(TT_KEYWORD, 'end'):
-                return  res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     f"Expected 'end'"
-                    ))
+                ))
             res.register_advancement()
             self.advance()
-            #TODO:Change the function setting
+            # TODO:Change the function setting
             return res.success(ForNode(var_name_tok=var_name, start_value_node=start_value, end_value_node=end_value,
-                                   step_value_node=step_value, body_node=body,should_return_null=True))
+                                       step_value_node=step_value, body_node=body, should_return_null=True))
 
         res.register_advancement()
         self.advance()
 
         body = res.register(self.expr())
         if res.error: return res
-        #TODO:change the function setting
+        # TODO:change the function setting
         return res.success(ForNode(var_name_tok=var_name, start_value_node=start_value, end_value_node=end_value,
-                                   step_value_node=step_value, body_node=body,should_return_null=False))
+                                   step_value_node=step_value, body_node=body, should_return_null=False))
+
     def while_expr(self):
         res = ParseResult()
 
@@ -1155,31 +1155,29 @@ class Parser:
                 f"Expected 'then'"
             ))
 
-
-
         res.register_advancement()
         self.advance()
 
-        if self.current_tok.type ==TT_NEWLINE:
+        if self.current_tok.type == TT_NEWLINE:
             res.register_advancement()
             self.advance()
 
-            body=res.register(self.statements())
+            body = res.register(self.statements())
             if res.error: return res
 
             if not self.current_tok.matches(TT_KEYWORD, 'end'):
-                return  res.failure(InvalidSyntaxError(
+                return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
                     f"Expected 'end'"
-                    ))
+                ))
             res.register_advancement()
             self.advance()
 
-            return res.success(WhileNode(condition,body,True))
+            return res.success(WhileNode(condition, body, True))
 
-        body=res.register(self.expr())
+        body = res.register(self.expr())
         if res.error: return res
-        return res.success(WhileNode(condition,body,False))
+        return res.success(WhileNode(condition, body, False))
 
     def expr(self):
         res = ParseResult()
@@ -1331,9 +1329,6 @@ class Parser:
                 ))
             res.register_advancement()
             self.advance()
-
-
-
 
             res.register_advancement()
             self.advance()
@@ -1506,6 +1501,7 @@ class List(Value):
 class String(Value):
     def __init__(self, value):
         self.value = value
+        self.set_pos()
         self.set_pos()
         self.set_context()
 
@@ -1722,7 +1718,7 @@ class BaseFunction(Value):
 
 
 class Function(BaseFunction):
-    def __init__(self, name, body_node, arg_names,should_return_null):
+    def __init__(self, name, body_node, arg_names, should_return_null):
         super().__init__(name)
         self.body_node = body_node
         self.arg_names = arg_names
@@ -1738,7 +1734,7 @@ class Function(BaseFunction):
         return res.success(Number.null if self.should_return_null else value.value)
 
     def copy(self):
-        copy = Function(self.name, self.body_node, self.arg_names,self.should_return_null)
+        copy = Function(self.name, self.body_node, self.arg_names, self.should_return_null)
         copy.set_context(self.context)
         copy.set_pos(self.pos_start, self.pos_end)
         return copy
@@ -1779,8 +1775,27 @@ class BuiltInFunction(BaseFunction):
     def execute_print(self, exec_ctx):
         print(str(exec_ctx.symbol_table.get("value")))
         return RTResult().success(Number.null)
-
     execute_print.arg_names = ["value"]
+
+
+    def execute_add(self, exec_ctx):
+        value1 =exec_ctx.symbol_table.get("value1")
+        value2 =exec_ctx.symbol_table.get("value2")
+
+        if not isinstance(value1, Number) or not isinstance(value2, Number):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "both of arguments must be numbers",
+                exec_ctx.context
+            ))
+        res =value1.added_to(value2)
+
+        if res[1]:
+            return RTResult.failure(res[1])
+        return RTResult().success(res[0])
+
+    execute_add.arg_names = ["value1", "value2"]
+
 
     def execute_print_ret(self, exec_ctx):
         return RTResult().success(String(str(exec_ctx.symbol_table.get("value"))))
@@ -1913,6 +1928,7 @@ BuiltInFunction.is_function = BuiltInFunction("is_function")
 BuiltInFunction.append = BuiltInFunction("append")
 BuiltInFunction.pop = BuiltInFunction("pop")
 BuiltInFunction.extend = BuiltInFunction("extend")
+BuiltInFunction.add = BuiltInFunction("add")
 
 
 class SymbolTable:
@@ -2119,7 +2135,7 @@ class Interpreter:
                 return res.success(expr_value)
 
         if node.else_case:
-            expr,should_return_null=node.else_case
+            expr, should_return_null = node.else_case
             expr_value = res.register(self.visit(expr, context))
             if res.error: return res
             return res.success(Number.null if should_return_null else expr_value)
@@ -2127,13 +2143,13 @@ class Interpreter:
         return res.success(None)
 
     def visit_FunDefNode(self, node, context):
-        #Here we are not sure about return
-        should_return_null=True
+        # Here we are not sure about return
+        should_return_null = True
         res = RTResult()
         func_name = node.var_name_tok.value if node.var_name_tok else None
         body_node = node.body_node
         arg_names = [arg_name.value for arg_name in node.arg_name_toks]
-        func_value = Function(func_name, body_node, arg_names,should_return_null).set_context(context).set_pos(
+        func_value = Function(func_name, body_node, arg_names, should_return_null).set_context(context).set_pos(
             node.pos_start, node.pos_end
         )
         if node.var_name_tok:
@@ -2177,6 +2193,7 @@ global_symbol_table.set("is_fun", BuiltInFunction.is_function)
 global_symbol_table.set("append", BuiltInFunction.append)
 global_symbol_table.set("pop", BuiltInFunction.pop)
 global_symbol_table.set("exetend", BuiltInFunction.extend)
+global_symbol_table.set("add", BuiltInFunction.add)
 
 
 def run(fn, text):
@@ -2197,6 +2214,3 @@ def run(fn, text):
     result = interpreter.visit(ast.node, context)
 
     return result.value, result.error
-
-
-

@@ -1,5 +1,5 @@
 
-# ZeroLang(still woking on it!)
+# ZeroLang
 
 ## 0. Introduction
 A simple programing language based on basic 
