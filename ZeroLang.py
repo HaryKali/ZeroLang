@@ -2,6 +2,8 @@ import math
 import os
 from types import new_class
 
+from altair import value
+
 TT_FLOAT = 'FLOAT'
 TT_IDENTIFIER = 'IDENTIFIER'
 TT_KEYWORD = 'KEYWORD'
@@ -1767,27 +1769,47 @@ class BuiltInFunction(BaseFunction):
     def execute_print(self, exec_ctx):
         print(str(exec_ctx.symbol_table.get("value")))
         return RTResult().success(Number.null)
+
     execute_print.arg_names = ["value"]
+
+    def execute_abs(self, exec_ctx):
+        value1 = exec_ctx.symbol_table.get("value1")
+        if not isinstance(value1, Number):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                f"{value1} must be a number",
+                self.context
+            ))
+        res = Number(abs(value1.value))
+        return RTResult().success(res)
+    execute_abs.arg_names = ["value1"]
+
+
+    def execute_max(self,exec_ctx):
+        value1 = exec_ctx.symbol_table.get("value1")
+        value2 = exec_ctx.symbol_table.get("value2")
+        res = Number(max(value1.value, value2.value))
+        return RTResult().success(res)
+
+    execute_max.arg_names = ["value1","value2"]
 
 
     def execute_add(self, exec_ctx):
-        value1 =exec_ctx.symbol_table.get("value1")
-        value2 =exec_ctx.symbol_table.get("value2")
-
+        value1 = exec_ctx.symbol_table.get("value1")
+        value2 = exec_ctx.symbol_table.get("value2")
         if not isinstance(value1, Number) or not isinstance(value2, Number):
             return RTResult().failure(RTError(
                 self.pos_start, self.pos_end,
                 "both of arguments must be numbers",
                 exec_ctx.context
             ))
-        res =value1.added_to(value2)
+        res = value1.added_to(value2)
 
         if res[1]:
             return RTResult.failure(res[1])
         return RTResult().success(res[0])
 
     execute_add.arg_names = ["value1", "value2"]
-
 
     def execute_print_ret(self, exec_ctx):
         return RTResult().success(String(str(exec_ctx.symbol_table.get("value"))))
@@ -1921,6 +1943,8 @@ BuiltInFunction.append = BuiltInFunction("append")
 BuiltInFunction.pop = BuiltInFunction("pop")
 BuiltInFunction.extend = BuiltInFunction("extend")
 BuiltInFunction.add = BuiltInFunction("add")
+BuiltInFunction.abs = BuiltInFunction("abs")
+BuiltInFunction.max=BuiltInFunction("max")
 
 
 class SymbolTable:
@@ -2186,6 +2210,10 @@ global_symbol_table.set("append", BuiltInFunction.append)
 global_symbol_table.set("pop", BuiltInFunction.pop)
 global_symbol_table.set("exetend", BuiltInFunction.extend)
 global_symbol_table.set("add", BuiltInFunction.add)
+global_symbol_table.set("abs", BuiltInFunction.abs)
+global_symbol_table.set("max", BuiltInFunction.max)
+
+
 
 
 def run(fn, text):
