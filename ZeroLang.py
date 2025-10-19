@@ -1784,6 +1784,13 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(res)
     execute_abs.arg_names = ["value1"]
 
+    def execute_min(self,exec_ctx):
+        value1 = exec_ctx.symbol_table.get("value1")
+        value2 = exec_ctx.symbol_table.get("value2")
+        res = Number(min(value1.value, value2.value))
+        return RTResult().success(res)
+    execute_min.arg_names = ["value1","value2"]
+
 
     def execute_max(self,exec_ctx):
         value1 = exec_ctx.symbol_table.get("value1")
@@ -1880,6 +1887,30 @@ class BuiltInFunction(BaseFunction):
 
     execute_append.arg_names = ["list", "value"]
 
+    # def execute_sort(self, exec_ctx):
+    #     list_= exec_ctx.symbol_table.get("list")
+    #     # reverse = exec_ctx.symbol_table.get("reverse")
+    #
+    #     if not isinstance(list_, List):
+    #         return RTResult().failure(RTError(
+    #             self.pos_start, self.pos_end,
+    #             "First argument must be list",
+    #             exec_ctx
+    #         ))
+    #
+    #     # if not isinstance(reverse, bool):
+    #     #     return RTResult().failure(RTError(
+    #     #         self.pos_start, self.pos_end,
+    #     #         "Second argument must be bool",
+    #     #         exec_ctx
+    #     #     ))
+    #     list_.elements.sort()
+    #     return RTResult().success(Number.null)
+    #
+    # # execute_sort.arg_names = ["list", "reverse"]
+    # execute_sort.arg_names = ["list"]
+
+
     def execute_pop(self, exec_ctx):
         list_ = exec_ctx.symbol_table.get("list")
         index = exec_ctx.symbol_table.get("index")
@@ -1945,6 +1976,9 @@ BuiltInFunction.extend = BuiltInFunction("extend")
 BuiltInFunction.add = BuiltInFunction("add")
 BuiltInFunction.abs = BuiltInFunction("abs")
 BuiltInFunction.max=BuiltInFunction("max")
+BuiltInFunction.min=BuiltInFunction("min")
+BuiltInFunction.sort=BuiltInFunction("sort")
+
 
 
 class SymbolTable:
@@ -2212,6 +2246,8 @@ global_symbol_table.set("exetend", BuiltInFunction.extend)
 global_symbol_table.set("add", BuiltInFunction.add)
 global_symbol_table.set("abs", BuiltInFunction.abs)
 global_symbol_table.set("max", BuiltInFunction.max)
+global_symbol_table.set("min", BuiltInFunction.min)
+global_symbol_table.set("sort", BuiltInFunction.sort)
 
 
 
