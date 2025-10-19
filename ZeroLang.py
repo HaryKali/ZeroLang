@@ -1887,29 +1887,33 @@ class BuiltInFunction(BaseFunction):
 
     execute_append.arg_names = ["list", "value"]
 
-    # def execute_sort(self, exec_ctx):
-    #     list_= exec_ctx.symbol_table.get("list")
-    #     # reverse = exec_ctx.symbol_table.get("reverse")
-    #
-    #     if not isinstance(list_, List):
-    #         return RTResult().failure(RTError(
-    #             self.pos_start, self.pos_end,
-    #             "First argument must be list",
-    #             exec_ctx
-    #         ))
-    #
-    #     # if not isinstance(reverse, bool):
-    #     #     return RTResult().failure(RTError(
-    #     #         self.pos_start, self.pos_end,
-    #     #         "Second argument must be bool",
-    #     #         exec_ctx
-    #     #     ))
-    #     list_.elements.sort()
-    #     return RTResult().success(Number.null)
-    #
-    # # execute_sort.arg_names = ["list", "reverse"]
-    # execute_sort.arg_names = ["list"]
+    def execute_sort(self, exec_ctx):
+        list_ = exec_ctx.symbol_table.get("list")
 
+        if not isinstance(list_, List):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument must be list",
+                exec_ctx
+            ))
+
+        for element in list_.elements:
+            if not isinstance(element, Number):
+                return RTResult().failure(RTError(
+                    self.pos_start, self.pos_end,
+                    "List elements must be numbers for sorting",
+                    exec_ctx
+                ))
+
+        sorted_elements = sorted(list_.elements, key=lambda x: x.value)
+
+        new_list = List(sorted_elements)
+        new_list.set_context(exec_ctx)
+        new_list.set_pos(self.pos_start, self.pos_end)
+
+        return RTResult().success(new_list)
+
+    execute_sort.arg_names = ["list"]
 
     def execute_pop(self, exec_ctx):
         list_ = exec_ctx.symbol_table.get("list")
