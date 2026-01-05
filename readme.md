@@ -1,297 +1,419 @@
-
 # ZeroLang
 
-## 0. Introduction
-A simple programing language based on basic 
+## 0. Overview
 
-* Still working on it
-* Now is a simpile interpreter which support basic arithmetic operations
+ZeroLang is a small interpreted programming language implemented in Python.  
+It is expression-oriented, dynamically typed, and designed for learning and experimentation with language implementation.
 
-## 1. Try ZeroLang in terminal
+### Important Syntax Rule
 
-      python3 shell.py 
+**ZeroLang programs are written as a single logical line.**
 
+* The semicolon (`;`) represents a newline.
+    
+* Physical line breaks are ignored by the parser.
+    
+* All multi-statement programs must use `;` explicitly.
+    
 
-## 🔤 Basic Elements
+Conceptually, this program:
 
-### Variable Declaration
+```plaintext
+var x = 1;
+var y = 2;
+x + y
+```
 
-Use the `var` keyword to declare a variable:
+is treated as **one single line of code** by the language.
+
+* * *
+
+## 1. Running ZeroLang
+
+Start the interactive shell:
+
+```bash
+python3 shell.py
+```
+
+Or execute code using the `run` function in Python.
+
+* * *
+
+## 2. Lexical Elements
+
+### 2.1 Keywords
+
+The following keywords are reserved:
+
+```
+var
+and
+or
+not
+if
+then
+elif
+else
+for
+to
+step
+while
+func
+end
+return
+continue
+break
+```
+
+* * *
+
+### 2.2 Identifiers
+
+Identifiers consist of letters, digits, and underscores, and must not start with a digit.
+
+Examples:
+
+```plaintext
+x
+counter
+temp_value
+```
+
+* * *
+
+### 2.3 Literals
+
+#### Numbers
+
+```plaintext
+10
+3.14
+0.25
+```
+
+#### Strings
+
+Strings use double quotes.
+
+```plaintext
+"hello"
+"line1\nline2"
+```
+
+#### Lists
+
+```plaintext
+[1, 2, 3]
+["a", "b", "c"]
+```
+
+* * *
+
+## 3. Operators
+
+### 3.1 Arithmetic Operators
+
+| Operator | Meaning |
+| --- | --- |
+| `+` | Addition |
+| `-` | Subtraction |
+| `*` | Multiplication |
+| `/` | Division |
+| `%` | Modulo |
+| `^` | Power |
+
+Example:
+
+```plaintext
+2 + 3 * 4
+```
+
+* * *
+
+### 3.2 Comparison Operators
+
+```plaintext
+==  !=  <  >  <=  >=
+```
+
+Example:
+
+```plaintext
+x >= 10
+```
+
+* * *
+
+### 3.3 Logical Operators
+
+```plaintext
+and  or  not
+```
+
+Example:
+
+```plaintext
+x > 0 and x < 10
+```
+
+* * *
+
+## 4. Statement Model
+
+### 4.1 Single-Line Program Model
+
+ZeroLang does **not** use real newlines.
+
+Instead:
+
+* `;` separates statements
+    
+* The entire program is parsed as a single sequence of statements
+    
+
+Valid program:
+
+```plaintext
+var x = 10; var y = 20; x + y
+```
+
+Invalid program:
 
 ```plaintext
 var x = 10
+var y = 20
 ```
 
----
+* * *
 
-### Number Types
+## 5. Grammar (EBNF-style)
 
-Supports both integers and floats:
+### 5.1 Program Structure
+
+```ebnf
+program        ::= statement (";" statement)* EOF
+statement      ::= return_stmt
+                 | continue_stmt
+                 | break_stmt
+                 | expr
+```
+
+* * *
+
+### 5.2 Expressions
+
+```ebnf
+expr           ::= var_assign
+                 | logic_expr
+
+var_assign     ::= "var" IDENTIFIER "=" expr
+
+logic_expr     ::= comp_expr (("and" | "or") comp_expr)*
+
+comp_expr      ::= arith_expr
+                 | "not" comp_expr
+                 | arith_expr (("==" | "!=" | "<" | ">" | "<=" | ">=") arith_expr)
+
+arith_expr     ::= term (("+" | "-") term)*
+
+term           ::= factor (("*" | "/" | "%") factor)*
+
+factor         ::= ("+" | "-") factor
+                 | power
+
+power          ::= call ("^" factor)*
+
+call           ::= atom ("(" (expr ("," expr)*)? ")")?
+
+atom           ::= INT
+                 | FLOAT
+                 | STRING
+                 | IDENTIFIER
+                 | list_expr
+                 | if_expr
+                 | for_expr
+                 | while_expr
+                 | func_def
+                 | "(" expr ")"
+```
+
+* * *
+
+## 6. Control Flow (We still got bug in this) 
+
+### 6.1 If Expression
+
+All branches are written inline using `;`.
 
 ```plaintext
-x = 5
-y = 3.14
+if x > 0 then var y = x * 2; y elif x == 0 then 0 else -x end
 ```
 
----
+The `if` expression always returns a value.
 
-### Operators
+* * *
 
-#### Arithmetic Operators
-
-| Operator | Meaning | Example |
-| --- | --- | --- |
-| `+` | Addition | `2 + 3` |
-| `-` | Subtraction | `5 - 1` |
-| `*` | Multiplication | `4 * 2` |
-| `/` | Division | `10 / 2` |
-| `%` | Modulo | `7 % 3` |
-| `^` | Power | `2 ^ 3` |
-
-#### Comparison Operators
-
-| Operator | Meaning | Example |
-| --- | --- | --- |
-| `==` | Equals | `x == 5` |
-| `!=` | Not equals | `x != 0` |
-| `<` | Less than | `x < 10` |
-| `>` | Greater than | `x > 3` |
-| `<=` | Less than or equal | `x <= 5` |
-| `>=` | Greater or equal | `x >= 2` |
-
-#### Logical Operators
-
-| Keyword | Meaning | Example |
-| --- | --- | --- |
-| `and` | Logical AND | `x > 0 and y < 10` |
-| `or` | Logical OR | `x == 0 or y == 5` |
-| `not` | Logical NOT | `not x == 0` |
-
----
-
-### Strings
-
-Defined using double quotes, with support for escape characters:
+### 6.2 While Loop
 
 ```plaintext
-msg = "Hello\nWorld"
+var x = 0; while x < 5 then x = x + 1; x end
 ```
 
----
+* * *
 
-### Lists
-
-Lists are enclosed in square brackets:
+### 6.3 For Loop
 
 ```plaintext
-arr = [1, 2, 3]
+for i = 0 to 5 then print(i) end
 ```
 
-- Access element: `arr / 1` → returns element at index 1
-- Remove element: `arr - 0` → removes element at index 0
-
----
-
-## 🔁 Control Flow
-
-### If Expression
+With step:
 
 ```plaintext
-if x > 0 then "positive"
-elif x == 0 then "zero"
-else "negative"
+for i = 10 to 0 step -1 then print(i) end
 ```
 
----
+* * *
 
-### For Loop
+## 7. Functions
 
-```plaintext
-for i = 1 to 5 then i * 2
-```
+### 7.1 Function Definition
 
-With optional step:
-
-```plaintext
-for i = 1 to 10 step 2 then i
-```
-
----
-
-### While Loop
-
-```plaintext
-while x < 5 then x = x + 1
-```
-
----
-
-## 🧩 Functions
-
-### Define a Function
+Single-expression function:
 
 ```plaintext
 func add(a, b) -> a + b
 ```
 
-### Anonymous Function
+
+
+* * *
+
+### 7.2 Function Call
 
 ```plaintext
-var square = func(x) -> x * x
+add(2, 3)
 ```
 
-### Function Call
+Functions are first-class values.
+
+* * *
+
+## 8. Control Statements
+
+### 8.1 Return
 
 ```plaintext
-add(2, 3)  # Returns 5
+return x * 2
 ```
 
----
+* Valid only inside functions
+    
+* Immediately exits the current function
+    
 
-## ⚙️ Built-in Functions
+* * *
 
-ZeroLang provides several built-in functions for common operations:
-
-### `print(value)`
-
-Prints the value to the console.
+### 8.2 Break
 
 ```plaintext
-print("Hello, World!")
+break
 ```
 
----
+* Exits the nearest enclosing loop
+    
 
-### `print_ret(value)`
+* * *
 
-Returns the string representation of the value (does not print).
+### 8.3 Continue
 
 ```plaintext
-var msg = print_ret(123)
+continue
 ```
 
----
+* Skips to the next loop iteration
+    
 
-### `input()`
+* * *
 
-Prompts user for input as a string.
+## 9. Built-in Functions
+
+Example usage (single line):
 
 ```plaintext
-var name = input()
+var l = [3, 1, 2]; sort(l); print(l)
 ```
 
----
+Available built-ins include:
 
-### `input_int()`
-
-Prompts user for input until a valid integer is entered.
-
-```plaintext
-var age = input_int()
+```
+print
+print_ret
+input
+input_int
+clear
+cls
+is_number
+is_string
+is_list
+is_function
+append
+pop
+extend
+add
+abs
+min
+max
+sort
 ```
 
----
+* * *
 
-### `clear()` / `cls()`
 
-Clears the terminal screen (cross-platform).
+This entire program is parsed as **one single logical line**.
 
-```plaintext
-clear()
-cls()
-```
+* * *
 
----
+## 10. Error Handling
 
-### `is_num(value)`
+ZeroLang reports:
 
-Returns `True` if value is a number, otherwise `False`.
+* Lexical errors
+    
+* Syntax errors
+    
+* Runtime errors
+    
 
-```plaintext
-is_num(10)      # True
-is_num("abc")   # False
-```
+Errors include precise source positions.
 
----
+* * *
 
-### `is_str(value)`
+## 12. Current Limitations
 
-Returns `True` if value is a string.
+* No real newline support
+    
+* Semicolon is mandatory
+    
+* No block-level scope
+    
+* No optimizations
+    
 
-```plaintext
-is_str("hello")  # True
-```
+* * *
 
----
+If you want, the next logical steps would be:
 
-### `is_list(value)`
+* Adding real newline tokens
+    
+* Making semicolons optional
+    
+* Introducing block scopes
+    
+* Generating a formal language specification
+    
 
-Returns `True` if value is a list.
+Just tell me what you want to do next.
 
-```plaintext
-is_list([1, 2, 3])  # True
-```
-
----
-
-### `is_fun(value)`
-
-Returns `True` if value is a function.
-
-```plaintext
-var f = func(x) -> x + 1
-is_fun(f)  # True
-```
-
----
-
-### `append(list, value)`
-
-Appends a value to the end of the list.
-
-```plaintext
-var l = [1, 2]
-append(l, 3)
-# l is now [1, 2, 3]
-```
-
----
-
-### `pop(list, index)`
-
-Removes and returns the element at the given index.
-
-```plaintext
-var l = [5, 6, 7]
-pop(l, 1)  # returns 6, l becomes [5, 7]
-```
-
----
-
-### `extend(listA, listB)`
-
-Extends `listA` by appending all elements from `listB`.
-
-```plaintext
-var a = [1]
-var b = [2, 3]
-extend(a, b)
-# a becomes [1, 2, 3]
-```
-
----
-
-## 🔍 Example Program
-
-```plaintext
-var square = func(x) -> x * x
-square(4)  
-```
-
----
-
-## ⚠️ Error Handling
-
-Lexical and syntax errors are handled by classes like `IllegalCharError`, `InvalidSyntaxError`, and `RTError`. They provide clear messages with line numbers and context arrows.
-
----
+* * *
