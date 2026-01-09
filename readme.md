@@ -246,8 +246,22 @@ atom           ::= INT
 
 All branches are written inline using `;`.
 
+Single expression (no `end` required):
+
 ```plaintext
-if x > 0 then var y = x * 2; y elif x == 0 then 0 else -x end
+if x > 0 then 10 else 20
+```
+
+Multiple statements (requires `end`):
+
+```plaintext
+if x > 0 then; var y = x * 2; y; end
+```
+
+With elif:
+
+```plaintext
+if x > 0 then 10 elif x == 0 then 0 else -x
 ```
 
 The `if` expression always returns a value.
@@ -256,22 +270,38 @@ The `if` expression always returns a value.
 
 ### 6.2 While Loop
 
+Single expression (no `end` required):
+
 ```plaintext
-var x = 0; while x < 5 then x = x + 1; x end
+var x = 0; while x < 5 then x
+```
+
+Multiple statements (requires `end`):
+
+```plaintext
+var x = 0; while x < 5 then; x = x + 1; x; end
 ```
 
 * * *
 
 ### 6.3 For Loop
 
+Single expression (no `end` required):
+
 ```plaintext
-for i = 0 to 5 then print(i) end
+for i = 0 to 5 then i
+```
+
+Multiple statements (requires `end`):
+
+```plaintext
+for i = 0 to 5 then; print(i); end
 ```
 
 With step:
 
 ```plaintext
-for i = 10 to 0 step -1 then print(i) end
+for i = 10 to 0 step -1 then i
 ```
 
 * * *
@@ -342,7 +372,7 @@ continue
 Example usage (single line):
 
 ```plaintext
-var l = [3, 1, 2]; sort(l); print(l)
+var l = [3, 1, 2]; sort(l,0); print(l)
 ```
 
 Available built-ins include:
