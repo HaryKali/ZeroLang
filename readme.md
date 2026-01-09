@@ -276,11 +276,6 @@ Single expression (no `end` required):
 var x = 0; while x < 5 then x
 ```
 
-Multiple statements (requires `end`):
-
-```plaintext
-var x = 0; while x < 5 then; x = x + 1; x; end
-```
 
 * * *
 
