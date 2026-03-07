@@ -1,0 +1,7 @@
+print(is_number(1));
+print(is_string("x"));
+print(is_function(print));
+print(is_list([1, 2]));
+var a = [1];
+extend(a, [2, 3]);
+print(a)

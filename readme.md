@@ -1,444 +1,267 @@
 # ZeroLang
 
-## 0. Overview
+ZeroLang is a small interpreted language written in Python.
+It is expression-oriented, dynamically typed, and designed for learning language implementation fundamentals.
 
-ZeroLang is a small interpreted programming language implemented in Python.  
-It is expression-oriented, dynamically typed, and designed for learning and experimentation with language implementation.
+## Highlights
 
-### Important Syntax Rule
+- Simple syntax with familiar operators
+- Variables, strings, lists, and user-defined functions
+- Control flow: `if`, `for`, `while`, `return`, `break`, `continue`
+- Built-in utility functions for I/O and list operations
+- REPL support through `shell.py`
+- Script execution from code using the built-in `run("path.zero")`
 
-**ZeroLang programs are written as a single logical line.**
+## Requirements
 
-* The semicolon (`;`) represents a newline.
-    
-* Physical line breaks are ignored by the parser.
-    
-* All multi-statement programs must use `;` explicitly.
-    
+- Python 3.10+
 
-Conceptually, this program:
+## Quick Start
 
-```plaintext
-var x = 1;
-var y = 2;
-x + y
-```
-
-is treated as **one single line of code** by the language.
-
-* * *
-
-## 1. Running ZeroLang
-
-Start the interactive shell:
+Run the interactive shell:
 
 ```bash
-python3 shell.py
+python shell.py
 ```
 
-Or execute code using the `run` function in Python.
+Run from Python:
 
-* * *
+```python
+import ZeroLang
 
-## 2. Lexical Elements
-
-### 2.1 Keywords
-
-The following keywords are reserved:
-
-```
-var
-and
-or
-not
-if
-then
-elif
-else
-for
-to
-step
-while
-func
-end
-return
-continue
-break
+value, error = ZeroLang.run("<stdin>", 'print("Hello World")')
+if error:
+    print(error.as_string())
+else:
+    print(value)
 ```
 
-* * *
+## Program Structure
 
-### 2.2 Identifiers
+A ZeroLang program is parsed as a sequence of statements.
 
-Identifiers consist of letters, digits, and underscores, and must not start with a digit.
+Statement separators:
 
-Examples:
+- `;`
+- Physical newline
+
+Both are valid, so these two styles are equivalent:
 
 ```plaintext
-x
-counter
-temp_value
+var x = 1; var y = 2; print(x + y)
 ```
-
-* * *
-
-### 2.3 Literals
-
-#### Numbers
 
 ```plaintext
-10
-3.14
-0.25
+var x = 1
+var y = 2
+print(x + y)
 ```
 
-#### Strings
+Single-line comments start with `#`.
 
-Strings use double quotes.
+## Keywords
 
 ```plaintext
-"hello"
-"line1\nline2"
+var and or not if then elif else for to step while func end return continue break
 ```
 
-#### Lists
+## Data Types
+
+- Number (int/float)
+- String
+- List
+- Function
+- Null-like value: `NULL`
+- Boolean-like values: `TRUE`, `FALSE` (also `True`, `False`)
+
+## Operators
+
+Arithmetic:
 
 ```plaintext
-[1, 2, 3]
-["a", "b", "c"]
++  -  *  /  %  ^
 ```
 
-* * *
-
-## 3. Operators
-
-### 3.1 Arithmetic Operators
-
-| Operator | Meaning |
-| --- | --- |
-| `+` | Addition |
-| `-` | Subtraction |
-| `*` | Multiplication |
-| `/` | Division |
-| `%` | Modulo |
-| `^` | Power |
-
-Example:
-
-```plaintext
-2 + 3 * 4
-```
-
-* * *
-
-### 3.2 Comparison Operators
+Comparison:
 
 ```plaintext
 ==  !=  <  >  <=  >=
 ```
 
-Example:
-
-```plaintext
-x >= 10
-```
-
-* * *
-
-### 3.3 Logical Operators
+Logical:
 
 ```plaintext
 and  or  not
 ```
 
-Example:
-
-```plaintext
-x > 0 and x < 10
-```
-
-* * *
-
-## 4. Statement Model
-
-### 4.1 Single-Line Program Model
-
-ZeroLang does **not** use real newlines.
-
-Instead:
-
-* `;` separates statements
-    
-* The entire program is parsed as a single sequence of statements
-    
-
-Valid program:
-
-```plaintext
-var x = 10; var y = 20; x + y
-```
-
-Invalid program:
+## Variables
 
 ```plaintext
 var x = 10
-var y = 20
+var name = "ZeroLang"
+var arr = [1, 2, 3]
 ```
 
-* * *
+## Control Flow
 
-## 5. Grammar (EBNF-style)
-
-### 5.1 Program Structure
-
-```ebnf
-program        ::= statement (";" statement)* EOF
-statement      ::= return_stmt
-                 | continue_stmt
-                 | break_stmt
-                 | expr
-```
-
-* * *
-
-### 5.2 Expressions
-
-```ebnf
-expr           ::= var_assign
-                 | logic_expr
-
-var_assign     ::= "var" IDENTIFIER "=" expr
-
-logic_expr     ::= comp_expr (("and" | "or") comp_expr)*
-
-comp_expr      ::= arith_expr
-                 | "not" comp_expr
-                 | arith_expr (("==" | "!=" | "<" | ">" | "<=" | ">=") arith_expr)
-
-arith_expr     ::= term (("+" | "-") term)*
-
-term           ::= factor (("*" | "/" | "%") factor)*
-
-factor         ::= ("+" | "-") factor
-                 | power
-
-power          ::= call ("^" factor)*
-
-call           ::= atom ("(" (expr ("," expr)*)? ")")?
-
-atom           ::= INT
-                 | FLOAT
-                 | STRING
-                 | IDENTIFIER
-                 | list_expr
-                 | if_expr
-                 | for_expr
-                 | while_expr
-                 | func_def
-                 | "(" expr ")"
-```
-
-* * *
-
-## 6. Control Flow (We still got bug in this) 
-
-### 6.1 If Expression
-
-All branches are written inline using `;`.
-
-Single expression (no `end` required):
+### If
 
 ```plaintext
-if x > 0 then 10 else 20
+if x > 0 then 1 elif x == 0 then 0 else -1
 ```
 
-Multiple statements (requires `end`):
+Block style:
 
 ```plaintext
-if x > 0 then; var y = x * 2; y; end
+if x > 0 then
+print("positive")
+else
+print("not positive")
+end
 ```
 
-With elif:
+### For
 
 ```plaintext
-if x > 0 then 10 elif x == 0 then 0 else -x
+for i = 0 to 5 then print(i)
+for i = 10 to 0 step -2 then print(i)
 ```
 
-The `if` expression always returns a value.
-
-* * *
-
-### 6.2 While Loop
-
-Single expression (no `end` required):
+### While
 
 ```plaintext
-var x = 0; while x < 5 then x
+var i = 0
+while i < 3 then var i = i + 1
 ```
 
+## Functions
 
-* * *
-
-### 6.3 For Loop
-
-Single expression (no `end` required):
-
-```plaintext
-for i = 0 to 5 then i
-```
-
-Multiple statements (requires `end`):
-
-```plaintext
-for i = 0 to 5 then; print(i); end
-```
-
-With step:
-
-```plaintext
-for i = 10 to 0 step -1 then i
-```
-
-* * *
-
-## 7. Functions
-
-### 7.1 Function Definition
-
-Single-expression function:
+Expression form:
 
 ```plaintext
 func add(a, b) -> a + b
+print(add(2, 3))
 ```
 
-
-
-* * *
-
-### 7.2 Function Call
+Block form with `return`:
 
 ```plaintext
-add(2, 3)
+func sum_to(n)
+var total = 0
+for i = 1 to n + 1 then var total = total + i
+return total
+end
+print(sum_to(5))
 ```
 
-Functions are first-class values.
-
-* * *
-
-## 8. Control Statements
-
-### 8.1 Return
+## Lists
 
 ```plaintext
-return x * 2
+var l = [3, 1, 2]
+append(l, 5)
+print(l)
+print(pop(l, 1))
+sort(l, 0)
+print(l)
+print(len(l))
 ```
 
-* Valid only inside functions
-    
-* Immediately exits the current function
-    
-
-* * *
-
-### 8.2 Break
+List indexing uses `/` with a numeric index:
 
 ```plaintext
-break
+var seq = [10, 20, 30]
+print(seq / 1)
 ```
 
-* Exits the nearest enclosing loop
-    
+## Built-in Functions
 
-* * *
+Core:
 
-### 8.3 Continue
+- `print(value)`
+- `print_ret(value)`
+- `input()`
+- `input_int()`
+- `clear()` / `cls()`
+
+Type checks:
+
+- `is_number(value)`
+- `is_string(value)`
+- `is_list(value)`
+- `is_function(value)`
+
+List operations:
+
+- `append(list, value)`
+- `pop(list, index)`
+- `extend(listA, listB)`
+- `len(list)`
+- `sort(target_list, reverse)`
+
+Script execution:
+
+- `run(filename)`
+
+Compatibility aliases are also available in the runtime:
+
+- `is_sum`, `is_str`, `is_fun`, `exetend`
+
+## Running `.zero` Files from Shell
+
+Inside `python shell.py`, execute scripts with:
 
 ```plaintext
-continue
+run("examples/test_fibonacci.zero")
 ```
 
-* Skips to the next loop iteration
-    
-
-* * *
-
-## 9. Built-in Functions
-
-Example usage (single line):
+You can also create launcher scripts:
 
 ```plaintext
-var l = [3, 1, 2]; sort(l,0); print(l)
+# examples/run_fibonacci.zero
+run("examples/test_fibonacci.zero")
 ```
 
-Available built-ins include:
+Then execute:
 
-```
-print
-print_ret
-input
-input_int
-clear
-cls
-is_number
-is_string
-is_list
-is_function
-append
-pop
-extend
-add
-abs
-min
-max
-sort
+```plaintext
+run("examples/run_fibonacci.zero")
 ```
 
-* * *
+## Examples Included
 
+The `examples` folder contains practical tests:
 
-This entire program is parsed as **one single logical line**.
+- `hello_world.zero`
+- `test_arithmetic.zero`
+- `test_if.zero`
+- `test_loops.zero`
+- `test_function.zero`
+- `test_lists.zero`
+- `test_builtins.zero`
+- `test_comments_newlines.zero`
+- `test_fibonacci.zero`
+- `run_fibonacci.zero`
 
-* * *
-
-## 10. Error Handling
+## Error Reporting
 
 ZeroLang reports:
 
-* Lexical errors
-    
-* Syntax errors
-    
-* Runtime errors
-    
+- Lexical errors
+- Syntax errors
+- Runtime errors with traceback context
 
-Errors include precise source positions.
+Errors include source positions to help locate the failing code quickly.
 
-* * *
+## Current Notes
 
-## 12. Current Limitations
+- The runtime currently prints debug tokens/parse success messages.
+- Global names are shared through a single global symbol table.
+- The project is focused on educational clarity over optimization.
 
-* No real newline support
-    
-* Semicolon is mandatory
-    
-* No block-level scope
-    
-* No optimizations
-    
+## Project Files
 
-* * *
+- `ZeroLang.py`: lexer, parser, AST, interpreter, runtime values, built-ins
+- `shell.py`: interactive console
+- `strings_with_arrows.py`: error pointer rendering
+- `examples/`: runnable language examples
 
-If you want, the next logical steps would be:
-
-* Adding real newline tokens
-    
-* Making semicolons optional
-    
-* Introducing block scopes
-    
-* Generating a formal language specification
-    
-
-Just tell me what you want to do next.
-
-* * *

@@ -1,0 +1,8 @@
+func add(a, b) -> a + b;
+print(add(2, 3));
+func sum_to(n);
+var total = 0;
+for i = 1 to n + 1 then var total = total + i;
+return total;
+end;
+print(sum_to(5))
