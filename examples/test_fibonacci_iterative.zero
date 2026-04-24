@@ -1,0 +1,12 @@
+var n = 10
+var a = 0
+var b = 1
+var seq = []
+for i = 0 to n then
+append(seq, a)
+var next = a + b
+var a = b
+var b = next
+end
+print(seq)
+print(seq / 9)
