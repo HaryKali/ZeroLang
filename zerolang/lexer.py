@@ -27,6 +27,9 @@ from zerolang.tokens import (
     TT_STRING,
     TT_LSQUARE,
     TT_RSQUARE,
+    TT_LBRACE,
+    TT_RBRACE,
+    TT_COLON,
     TT_NEWLINE,
     KEYWORDS,
     DIGITS,
@@ -103,6 +106,15 @@ class Lexer:
                 self.advance()
             elif self.current_char == ']':
                 tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == '{':
+                tokens.append(Token(TT_LBRACE, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == '}':
+                tokens.append(Token(TT_RBRACE, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == ':':
+                tokens.append(Token(TT_COLON, pos_start=self.pos))
                 self.advance()
             elif self.current_char == ";" or self.current_char == "\n":
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))

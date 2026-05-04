@@ -135,6 +135,54 @@ class List(Value):
         return f'[{",".join([str(x) for x in self.elements])}]'
 
 
+class Dict(Value):
+    def __init__(self, entries):
+        super().__init__()
+        self.entries = entries
+
+    @staticmethod
+    def key_from_value(val):
+        if isinstance(val, String):
+            return ("s", val.value)
+        if isinstance(val, Number):
+            return ("n", float(val.value))
+        return None
+
+    def get_at(self, key_val, key_pos_start, key_pos_end, context):
+        k = self.key_from_value(key_val)
+        if k is None:
+            return None, RTError(
+                key_pos_start, key_pos_end,
+                "Dictionary key must be a string or number",
+                context
+            )
+        if k not in self.entries:
+            return None, RTError(
+                key_pos_start, key_pos_end,
+                "Key not found in dictionary",
+                context
+            )
+        return self.entries[k], None
+
+    def copy(self):
+        copy = Dict(dict(self.entries))
+        copy.set_pos(self.pos_start, self.pos_end)
+        copy.set_context(self.context)
+        return copy
+
+    def __str__(self):
+        parts = []
+        for k, v in self.entries.items():
+            if k[0] == "s":
+                parts.append(f'"{k[1]}": {v}')
+            else:
+                parts.append(f'{k[1]}: {v}')
+        return "{" + ", ".join(parts) + "}"
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class String(Value):
     def __init__(self, value):
         self.value = value

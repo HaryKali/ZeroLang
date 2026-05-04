@@ -1,0 +1,5 @@
+var a = 99
+var d = {"a": a, "b": 2}
+var k = "a"
+print(d[k])
+print(d["b"])

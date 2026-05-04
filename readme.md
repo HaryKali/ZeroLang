@@ -7,7 +7,7 @@ Based On: https://github.com/davidcallanan/py-myopl-code
 ## Highlights
 
 - Simple syntax with familiar operators
-- Variables, strings, lists, and user-defined functions
+- Variables, strings, lists, dictionaries (hash maps), and user-defined functions
 - Control flow including if, for, while, return, break, and continue
 - Built-in functions for input/output and list manipulation
 - REPL support via shell.py
@@ -62,6 +62,7 @@ var and or not if then elif else for to step while func end return continue brea
 - Number (integer or float)
 - String
 - List
+- Dict (string or numeric keys)
 - Function
 - NULL
 - Boolean-like values (TRUE, FALSE, True, False)
@@ -159,6 +160,32 @@ var seq = [10, 20, 30]
 print(seq / 1)
 ```
 
+You can also index lists with square brackets (see [Dictionaries](#dictionaries)).
+
+## Dictionaries
+
+Dictionaries are unordered maps from keys to values. Literal syntax mirrors common brace notation: comma-separated `key: value` pairs inside `{` `}`. Keys and values are arbitrary expressions; at runtime each **key** must evaluate to a **string** or **number**.
+
+```plaintext
+var d = {"a": 1, "b": 2}
+var k = "a"
+print(d[k])
+print(d["b"])
+```
+
+Empty dictionary:
+
+```plaintext
+var empty = {}
+```
+
+Use square brackets for lookup: `dict[key]`. The same subscript syntax works for lists, so `seq[1]` is equivalent to `seq / 1` for numeric indices.
+
+```plaintext
+var seq = [10, 20, 30]
+print(seq[1])
+```
+
 ## Built-in Functions
 
 Core functions:
@@ -221,6 +248,7 @@ The examples directory includes:
 - test_loops.zero
 - test_function.zero
 - test_lists.zero
+- test_dict.zero
 - test_builtins.zero
 - test_comments_newlines.zero
 - test_fibonacci.zero
@@ -247,7 +275,7 @@ Errors include source location information using arrows to point to the offendin
   - nodes.py: Abstract Syntax Tree node definitions
   - parser.py: Recursive descent parser
   - rtresult.py: Runtime result and control flow handling
-  - values.py: Runtime value types (Number, String, List, Function, etc.)
+  - values.py: Runtime value types (Number, String, List, Dict, Function, etc.)
   - builtins.py: Built-in functions implementation
   - globals.py: Global symbol table initialization
   - interpreter.py: AST visitor and evaluation logic

@@ -27,6 +27,9 @@ TT_COMMA = "TT_COMMA"
 TT_STRING = "TT_STRING"
 TT_LSQUARE = "LSQUARE"
 TT_RSQUARE = "RSQUARE"
+TT_LBRACE = "LBRACE"
+TT_RBRACE = "RBRACE"
+TT_COLON = "COLON"
 TT_NEWLINE = "NEWLINE"
 
 KEYWORDS = [
@@ -222,6 +225,15 @@ class Lexer:
             elif self.current_char == ']':
                 tokens.append(Token(TT_RSQUARE, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == '{':
+                tokens.append(Token(TT_LBRACE, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == '}':
+                tokens.append(Token(TT_RBRACE, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == ':':
+                tokens.append(Token(TT_COLON, pos_start=self.pos))
+                self.advance()
             elif self.current_char == ";" or self.current_char == "\n":
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
                 self.advance()
@@ -404,6 +416,21 @@ class ListNode:
 
     def __repr__(self):
         return f'{self.tok}'
+
+
+class DictNode:
+    def __init__(self, pair_nodes, pos_start, pos_end):
+        self.pair_nodes = pair_nodes
+        self.pos_start = pos_start
+        self.pos_end = pos_end
+
+
+class SubscriptNode:
+    def __init__(self, obj_node, index_node, pos_end):
+        self.obj_node = obj_node
+        self.index_node = index_node
+        self.pos_start = obj_node.pos_start
+        self.pos_end = pos_end
 
 
 class NumberNode:
@@ -898,48 +925,65 @@ class Parser:
 
     def call(self):
         res = ParseResult()
-        atom = res.register(self.atom())
+        node = res.register(self.atom())
         if res.error: return res
 
-        if self.current_tok.type == TT_LPAREN:
-            res.register_advancement()
-            self.advance()
-            arg_nodes = []
-
-            if self.current_tok.type == TT_RPAREN:
+        while self.current_tok.type in (TT_LPAREN, TT_LSQUARE):
+            if self.current_tok.type == TT_LPAREN:
                 res.register_advancement()
                 self.advance()
-            else:
-                arg_nodes.append(res.register(self.expr()))
-                if res.error:
-                    return res.failure(
-                        InvalidSyntaxError(
-                            self.current_tok.pos_start, self.current_tok.pos_end,
-                            "Expected ')', 'var', 'for', 'while', 'func', 'int', 'float', identifier'"
-                        )
-                    )
+                arg_nodes = []
 
-                while self.current_tok.type == TT_COMMA:
+                if self.current_tok.type == TT_RPAREN:
+                    res.register_advancement()
+                    self.advance()
+                else:
+                    arg_nodes.append(res.register(self.expr()))
+                    if res.error:
+                        return res.failure(
+                            InvalidSyntaxError(
+                                self.current_tok.pos_start, self.current_tok.pos_end,
+                                "Expected ')', 'var', 'for', 'while', 'func', 'int', 'float', identifier'"
+                            )
+                        )
+
+                    while self.current_tok.type == TT_COMMA:
+                        res.register_advancement()
+                        self.advance()
+
+                        arg_nodes.append(res.register(self.expr()))
+                        if res.error: return res
+
+                    if self.current_tok.type != TT_RPAREN:
+                        return res.failure(
+                            InvalidSyntaxError(
+                                self.current_tok.pos_start, self.current_tok.pos_end,
+                                "Expected ',' or ')'"
+                            )
+                        )
+
                     res.register_advancement()
                     self.advance()
 
-                    arg_nodes.append(res.register(self.expr()))
-                    if res.error: return res
-
-                if self.current_tok.type != TT_RPAREN:
+                node = CallNode(node, arg_nodes)
+            else:
+                res.register_advancement()
+                self.advance()
+                index_expr = res.register(self.expr())
+                if res.error: return res
+                if self.current_tok.type != TT_RSQUARE:
                     return res.failure(
                         InvalidSyntaxError(
                             self.current_tok.pos_start, self.current_tok.pos_end,
-                            "Expected ',' or ')'"
+                            "Expected ']'"
                         )
                     )
-
+                pos_end = self.current_tok.pos_end.copy()
                 res.register_advancement()
                 self.advance()
+                node = SubscriptNode(node, index_expr, pos_end)
 
-            return res.success(CallNode(atom, arg_nodes))
-
-        return res.success(atom)
+        return res.success(node)
 
     def atom(self):
         res = ParseResult()
@@ -979,7 +1023,10 @@ class Parser:
             if res.error: return res
             return res.success(list_expr)
 
-
+        elif tok.type == TT_LBRACE:
+            dict_expr = res.register(self.dict_expr())
+            if res.error: return res
+            return res.success(dict_expr)
 
         elif tok.matches(TT_KEYWORD, 'if'):
             if_expr = res.register(self.if_expr())
@@ -1100,6 +1147,64 @@ class Parser:
             element_nodes,
             pos_start,
             self.current_tok.pos_end.copy()
+        ))
+
+    def dict_expr(self):
+        res = ParseResult()
+        pair_nodes = []
+        pos_start = self.current_tok.pos_start.copy()
+        if self.current_tok.type != TT_LBRACE:
+            return res.failure(
+                InvalidSyntaxError(
+                    self.current_tok.pos_start,
+                    self.current_tok.pos_end,
+                    "Expected '{'"
+                )
+            )
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_RBRACE:
+            pos_end = self.current_tok.pos_end.copy()
+            res.register_advancement()
+            self.advance()
+        else:
+            while True:
+                key_node = res.register(self.expr())
+                if res.error: return res
+                if self.current_tok.type != TT_COLON:
+                    return res.failure(
+                        InvalidSyntaxError(
+                            self.current_tok.pos_start, self.current_tok.pos_end,
+                            "Expected ':'"
+                        )
+                    )
+                res.register_advancement()
+                self.advance()
+                value_node = res.register(self.expr())
+                if res.error: return res
+                pair_nodes.append((key_node, value_node))
+                if self.current_tok.type == TT_COMMA:
+                    res.register_advancement()
+                    self.advance()
+                    continue
+                if self.current_tok.type == TT_RBRACE:
+                    break
+                return res.failure(
+                    InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        "Expected ',' or '}'"
+                    )
+                )
+
+            pos_end = self.current_tok.pos_end.copy()
+            res.register_advancement()
+            self.advance()
+
+        return res.success(DictNode(
+            pair_nodes,
+            pos_start,
+            pos_end
         ))
 
     def for_expr(self):
@@ -1598,6 +1703,54 @@ class List(Value):
 
     def __repr__(self):
         return f'[{",".join([str(x) for x in self.elements])}]'
+
+
+class Dict(Value):
+    def __init__(self, entries):
+        super().__init__()
+        self.entries = entries
+
+    @staticmethod
+    def key_from_value(val):
+        if isinstance(val, String):
+            return ("s", val.value)
+        if isinstance(val, Number):
+            return ("n", float(val.value))
+        return None
+
+    def get_at(self, key_val, key_pos_start, key_pos_end, context):
+        k = self.key_from_value(key_val)
+        if k is None:
+            return None, RTError(
+                key_pos_start, key_pos_end,
+                "Dictionary key must be a string or number",
+                context
+            )
+        if k not in self.entries:
+            return None, RTError(
+                key_pos_start, key_pos_end,
+                "Key not found in dictionary",
+                context
+            )
+        return self.entries[k], None
+
+    def copy(self):
+        copy = Dict(dict(self.entries))
+        copy.set_pos(self.pos_start, self.pos_end)
+        copy.set_context(self.context)
+        return copy
+
+    def __str__(self):
+        parts = []
+        for k, v in self.entries.items():
+            if k[0] == "s":
+                parts.append(f'"{k[1]}": {v}')
+            else:
+                parts.append(f'{k[1]}: {v}')
+        return "{" + ", ".join(parts) + "}"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class String(Value):
@@ -2126,6 +2279,66 @@ class Interpreter:
         return res.success(
             List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
+
+    def visit_DictNode(self, node, context):
+        res = RTResult()
+        entries = {}
+
+        for key_node, value_node in node.pair_nodes:
+            key_val = res.register(self.visit(key_node, context))
+            if res.should_return(): return res
+            val = res.register(self.visit(value_node, context))
+            if res.should_return(): return res
+            mk = Dict.key_from_value(key_val)
+            if mk is None:
+                return res.failure(RTError(
+                    key_val.pos_start, key_val.pos_end,
+                    "Dictionary key must be a string or number",
+                    context
+                ))
+            entries[mk] = val
+
+        return res.success(
+            Dict(entries).set_context(context).set_pos(node.pos_start, node.pos_end)
+        )
+
+    def visit_SubscriptNode(self, node, context):
+        res = RTResult()
+        obj = res.register(self.visit(node.obj_node, context))
+        if res.error: return res
+        key = res.register(self.visit(node.index_node, context))
+        if res.error: return res
+
+        if isinstance(obj, List):
+            if not isinstance(key, Number):
+                return res.failure(RTError(
+                    node.index_node.pos_start, node.index_node.pos_end,
+                    "List index must be a number",
+                    context
+                ))
+            try:
+                elt = obj.elements[int(key.value)]
+            except Exception:
+                return res.failure(RTError(
+                    node.index_node.pos_start, node.index_node.pos_end,
+                    "List index out of range or invalid",
+                    context
+                ))
+            elt.set_pos(node.pos_start, node.pos_end).set_context(context)
+            return res.success(elt)
+
+        if isinstance(obj, Dict):
+            value, error = obj.get_at(key, node.index_node.pos_start, node.index_node.pos_end, context)
+            if error:
+                return res.failure(error)
+            value.set_pos(node.pos_start, node.pos_end).set_context(context)
+            return res.success(value)
+
+        return res.failure(RTError(
+            node.obj_node.pos_start, node.obj_node.pos_end,
+            "Only lists and dictionaries support [] access",
+            context
+        ))
 
     def visit_ForNode(self, node, context):
         res = RTResult()

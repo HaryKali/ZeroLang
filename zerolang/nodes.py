@@ -27,6 +27,27 @@ class ListNode:
         return f'ListNode({self.element_nodes!r})'
 
 
+class DictNode:
+    def __init__(self, pair_nodes, pos_start, pos_end):
+        self.pair_nodes = pair_nodes
+        self.pos_start = pos_start
+        self.pos_end = pos_end
+
+    def __repr__(self):
+        return f'DictNode({self.pair_nodes!r})'
+
+
+class SubscriptNode:
+    def __init__(self, obj_node, index_node, pos_end):
+        self.obj_node = obj_node
+        self.index_node = index_node
+        self.pos_start = obj_node.pos_start
+        self.pos_end = pos_end
+
+    def __repr__(self):
+        return f'SubscriptNode({self.obj_node!r}, {self.index_node!r})'
+
+
 class NumberNode:
     def __init__(self, tok):
         self.tok = tok

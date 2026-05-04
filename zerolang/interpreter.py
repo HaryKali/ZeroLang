@@ -1,6 +1,8 @@
 from zerolang.errors import RTError
 from zerolang.nodes import (
     ListNode,
+    DictNode,
+    SubscriptNode,
     ForNode,
     WhileNode,
     NumberNode,
@@ -32,7 +34,7 @@ from zerolang.tokens import (
     TT_GTE,
     TT_KEYWORD,
 )
-from zerolang.values import Value, Number, String, List, Function
+from zerolang.values import Value, Number, String, List, Dict, Function
 
 
 class Interpreter:
@@ -55,6 +57,70 @@ class Interpreter:
         return res.success(
             List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
+
+    def visit_DictNode(self, node, context):
+        res = RTResult()
+        entries = {}
+
+        for key_node, value_node in node.pair_nodes:
+            key_val = res.register(self.visit(key_node, context))
+            if res.should_return():
+                return res
+            val = res.register(self.visit(value_node, context))
+            if res.should_return():
+                return res
+            mk = Dict.key_from_value(key_val)
+            if mk is None:
+                return res.failure(RTError(
+                    key_val.pos_start, key_val.pos_end,
+                    "Dictionary key must be a string or number",
+                    context
+                ))
+            entries[mk] = val
+
+        return res.success(
+            Dict(entries).set_context(context).set_pos(node.pos_start, node.pos_end)
+        )
+
+    def visit_SubscriptNode(self, node, context):
+        res = RTResult()
+        obj = res.register(self.visit(node.obj_node, context))
+        if res.error:
+            return res
+        key = res.register(self.visit(node.index_node, context))
+        if res.error:
+            return res
+
+        if isinstance(obj, List):
+            if not isinstance(key, Number):
+                return res.failure(RTError(
+                    node.index_node.pos_start, node.index_node.pos_end,
+                    "List index must be a number",
+                    context
+                ))
+            try:
+                elt = obj.elements[int(key.value)]
+            except (IndexError, TypeError, ValueError):
+                return res.failure(RTError(
+                    node.index_node.pos_start, node.index_node.pos_end,
+                    "List index out of range or invalid",
+                    context
+                ))
+            elt.set_pos(node.pos_start, node.pos_end).set_context(context)
+            return res.success(elt)
+
+        if isinstance(obj, Dict):
+            value, error = obj.get_at(key, node.index_node.pos_start, node.index_node.pos_end, context)
+            if error:
+                return res.failure(error)
+            value.set_pos(node.pos_start, node.pos_end).set_context(context)
+            return res.success(value)
+
+        return res.failure(RTError(
+            node.obj_node.pos_start, node.obj_node.pos_end,
+            "Only lists and dictionaries support [] access",
+            context
+        ))
 
     def visit_ForNode(self, node, context):
         res = RTResult()
