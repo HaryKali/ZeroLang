@@ -71,7 +71,7 @@ var and or not if then elif else for to step while func end return continue brea
 
 ### Arithmetic
 
-+ - * / % ^
+ + - * / ^ %
 
 ### Comparison
 
@@ -289,5 +289,3 @@ Errors include source location information using arrows to point to the offendin
 - Debug messages for lexical and syntax analysis are currently enabled
 - All variables share a single global symbol table
 - The implementation prioritizes educational clarity over performance optimizations
-
-This project does not declare a specific license.
