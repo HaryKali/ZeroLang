@@ -72,7 +72,7 @@ var and or not if then elif else for to step while func end return continue brea
 ### Arithmetic
 1. "+": 1+2=3
 2. "-": 1*2=2
-3. "*": 2*2=4
+3. "\*": 2\*2=4
 4. "/": 2/2=1.0
 5. "^": 2^2=4
 
