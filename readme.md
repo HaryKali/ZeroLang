@@ -70,8 +70,11 @@ var and or not if then elif else for to step while func end return continue brea
 ## Operators
 
 ### Arithmetic
-
- + - * / ^ %
+1. "+": 1+2=3
+2. "-": 1*2=2
+3. "*": 2*2=4
+4. "/": 2/2=1.0
+5. "^": 2^2=4
 
 ### Comparison
 
@@ -267,7 +270,7 @@ Errors include source location information using arrows to point to the offendin
 
 ## Project Structure
 
-- ZeroLang.py: Public API and backward compatibility layer
+- ZeroLang.py: All in one file
 - zerolang/: Main implementation package
   - errors.py: Error classes and formatting
   - tokens.py: Token definitions and Position class
